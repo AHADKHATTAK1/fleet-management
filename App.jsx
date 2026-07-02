@@ -106,8 +106,15 @@ const money = (n) => `$${n.toLocaleString()}`;
 
 const Pill = ({ status }) => {
   const meta = STATUS_META[status] || STATUS_META.pending;
+  let dotClass = "";
+  if (status === "in_transit") dotClass = "status-dot dot-transit";
+  else if (status === "delayed") dotClass = "status-dot dot-delayed";
+  else if (status === "pending" || status === "partial") dotClass = "status-dot dot-pending";
+  else if (status === "received" || status === "delivered" || status === "active") dotClass = "status-dot dot-active";
+
   return (
     <span className="pill" style={{ color: meta.color, background: meta.bg }}>
+      {dotClass && <span className={dotClass} />}
       {meta.label}
     </span>
   );
@@ -115,7 +122,7 @@ const Pill = ({ status }) => {
 
 function flashToast(setToast, msg) {
   setToast(msg);
-  window.clearTimeout(window.__toastTimer);
+  if (typeof window.__toastTimer === "number") window.clearTimeout(window.__toastTimer);
   window.__toastTimer = window.setTimeout(() => setToast(""), 2400);
 }
 
@@ -188,14 +195,22 @@ function Dashboard({ role, stock, receiving, transactions, staff }) {
   );
 }
 
-function ShipmentsView() {
-  const [selectedId, setSelectedId] = useState(SHIPMENTS[0].id);
-  const selected = SHIPMENTS.find((s) => s.id === selectedId) || SHIPMENTS[0];
+function ShipmentsView({ shipments }) {
+  const [selectedId, setSelectedId] = useState(shipments[0]?.id || SHIPMENTS[0].id);
+
+  React.useEffect(() => {
+    if (!shipments.some((s) => s.id === selectedId)) {
+      setSelectedId(shipments[0]?.id || SHIPMENTS[0].id);
+    }
+  }, [shipments, selectedId]);
+
+  const selected = shipments.find((s) => s.id === selectedId) || shipments[0] || SHIPMENTS[0];
+  const meta = STATUS_META[selected.status] || STATUS_META.pending;
 
   return (
     <div className="two-col shipments-layout">
       <div className="ship-list">
-        {SHIPMENTS.map((s) => (
+        {shipments.map((s) => (
           <button key={s.id} className={`ship-card ${s.id === selectedId ? "active" : ""}`} onClick={() => setSelectedId(s.id)}>
             <div className="ship-card-top">
               <span className="mono-tag">{s.id}</span>
@@ -218,8 +233,8 @@ function ShipmentsView() {
           <Pill status={selected.status} />
         </div>
         <div className="route-track">
-          <div className="route-fill" style={{ width: `${selected.progress * 100}%`, background: STATUS_META[selected.status].color }} />
-          <div className="route-truck" style={{ left: `calc(${selected.progress * 100}% - 9px)`, color: STATUS_META[selected.status].color }}>
+          <div className="route-fill" style={{ width: `${selected.progress * 100}%`, background: meta.color }} />
+          <div className="route-truck" style={{ left: `calc(${selected.progress * 100}% - 9px)`, color: meta.color }}>
             <Truck size={18} />
           </div>
         </div>
@@ -709,11 +724,11 @@ export default function App() {
       <aside className="sidebar">
         <div>
           <div className="brand-mark">
-            <Package size={18} />
+            <Truck size={18} style={{ color: '#ff8a3d' }} />
           </div>
           <div className="brand-copy">
-            <div className="brand-name">Northstar Ops</div>
-            <div className="brand-sub">Freight control center</div>
+            <div className="brand-name" style={{ fontSize: '0.9rem', lineHeight: '1.2', fontWeight: '800' }}>HAJI BARKAT KHAN JADOON</div>
+            <div className="brand-sub" style={{ fontSize: '0.78rem', color: '#ff8a3d', fontWeight: '600' }}>GOODS TRANSPORT</div>
           </div>
         </div>
 
@@ -768,7 +783,7 @@ export default function App() {
           {section === "shipments" && (
             <div>
               {query.trim() ? <div className="hint" style={{ marginBottom: 16 }}>{filteredShipments.length} shipment(s) matched your search.</div> : null}
-              <ShipmentsView />
+              <ShipmentsView shipments={filteredShipments} />
             </div>
           )}
           {section === "inventory" && <StockView stock={stock} setStock={setStock} />}
