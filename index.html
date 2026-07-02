@@ -260,6 +260,103 @@ a{color:var(--accent);text-decoration:none}
 .empty-state .icon{font-size:3.2rem;margin-bottom:.8rem;display:block}
 .tag{display:inline-flex;padding:.22rem .55rem;border-radius:7px;font-size:.7rem;font-weight:700}
 
+/* ── GPS CONTROL MONITOR ── */
+.map-wrap {
+  position: relative;
+  width: 100%;
+  background: rgba(8, 16, 32, 0.6);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5);
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  margin-bottom: 16px;
+}
+@media(max-width: 900px) {
+  .map-wrap { grid-template-columns: 1fr; }
+}
+.map-svg-container {
+  padding: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-right: 1px solid var(--line);
+  background: radial-gradient(circle at center, rgba(14,28,54,0.4) 0%, transparent 80%);
+}
+@media(max-width: 900px) {
+  .map-svg-container { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+.map-sidebar {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(6, 11, 22, 0.3);
+  justify-content: center;
+}
+.map-terminal-indicator {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .65rem .85rem;
+  background: rgba(255, 255, 255, .02);
+  border: 1px solid rgba(255, 255, 255, .04);
+  border-radius: 12px;
+  font-size: .84rem;
+}
+.terminal-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  box-shadow: 0 0 10px currentColor;
+}
+@keyframes pulse-terminal-glow {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(61,220,151,0.6)); }
+  50% { filter: drop-shadow(0 0 10px rgba(61,220,151,1)); }
+}
+.pulse-glow-green {
+  animation: pulse-terminal-glow 2.5s infinite;
+}
+@keyframes path-animate {
+  to { stroke-dashoffset: -20; }
+}
+.route-path {
+  stroke-dasharray: 6, 4;
+  animation: path-animate 2s infinite linear;
+}
+@keyframes pulse-truck-glow {
+  0%, 100% { filter: drop-shadow(0 0 3px #ff8a3d); }
+  50% { filter: drop-shadow(0 0 12px #ff8a3d); }
+}
+.animated-truck-icon {
+  animation: pulse-truck-glow 1.5s infinite ease-in-out;
+}
+@keyframes drive-truck-khi-lhr {
+  0% { offset-distance: 0%; }
+  100% { offset-distance: 100%; }
+}
+.map-truck-khi-lhr {
+  offset-path: path("M50,280 L180,200 L250,150");
+  offset-rotate: auto;
+  animation: drive-truck-khi-lhr 22s infinite linear;
+}
+.map-truck-lhr-isb {
+  offset-path: path("M250,150 L280,90");
+  offset-rotate: auto;
+  animation: drive-truck-khi-lhr 10s infinite linear;
+}
+.map-truck-isb-pes {
+  offset-path: path("M280,90 L230,60");
+  offset-rotate: auto;
+  animation: drive-truck-khi-lhr 8s infinite linear;
+}
+.map-truck-khi-qta {
+  offset-path: path("M50,280 L90,170");
+  offset-rotate: auto;
+  animation: drive-truck-khi-lhr 14s infinite linear;
+}
+
 /* ── CHART CONTAINERS ── */
 .chart-wrap{position:relative;padding:1rem 0;height:220px}
 .chart-wrap-sm{position:relative;height:160px}
@@ -339,9 +436,13 @@ a{color:var(--accent);text-decoration:none}
 <div id="app" class="app hidden">
   <aside class="sidebar" id="sidebar">
     <div>
-      <div class="brand">
-        <div class="logo-box">HBK</div>
-        <div><div class="brand-name" id="sidebarCompany">HAJI BARKAT KHAN JADOON</div><div class="brand-sub">GOODS TRANSPORT</div></div>
+      <div class="brand" style="background:linear-gradient(135deg,rgba(255,158,34,0.12),rgba(88,166,255,0.06));border-color:rgba(255,158,34,0.3)">
+        <div class="logo-box" style="background:linear-gradient(135deg,#ff9e22,#ff6c00);color:#020710">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="display:block">
+            <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm12 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-7l2.25 3H17V11.5h2.5z"/>
+          </svg>
+        </div>
+        <div><div class="brand-name" id="sidebarCompany" style="letter-spacing:0.02em;font-size:0.86rem;font-weight:900;color:#fff">HBK JADOON</div><div class="brand-sub" style="letter-spacing:0.18em;font-size:0.6rem;color:#ff9e22;font-weight:800">LOGISTICS GROUP</div></div>
       </div>
       <nav class="nav" id="nav"></nav>
     </div>
@@ -385,7 +486,7 @@ a{color:var(--accent);text-decoration:none}
 const SK='hbk_adv_v5';
 
 const SEED={
-  settings:{companyName:'HAJI BARKAT KHAN JADOON',companyFull:'Haji Barkat Khan Jadoon Goods Transport',address:'Plot 24, Transport Hub, Karachi',phone:'021-3456789',email:'info@hbkjadoon.pk',currency:'Rs',fuelRate:285,taxRate:0,logo:'HBK'},
+  settings:{companyName:'HBK JADOON LOGISTICS',companyFull:'HBK Jadoon Logistics Group & Goods Transport',address:'Plot 24, Hub Center, Karachi',phone:'021-3456789',email:'info@hbkjadoon.pk',currency:'Rs',fuelRate:285,taxRate:0,logo:'HBK'},
   shipments:[
     {id:'WB-48213',client:'Northbridge Foods',origin:'Lahore',dest:'Karachi',status:'in_transit',eta:'2:40 PM',progress:.62,driver:'Ali Raza',vehicle:'TRK-0731',cargo:'Dry goods',weight:2400,freightCharge:62000,notes:''},
     {id:'WB-48190',client:'Calder Steel Co.',origin:'Islamabad',dest:'Peshawar',status:'delayed',eta:'11:15 AM',progress:.41,driver:'Imran Khan',vehicle:'TRK-0559',cargo:'Steel rods',weight:5000,freightCharge:48000,notes:'Road block near Attock'},
@@ -849,6 +950,112 @@ function dashboardView(){
     <button class="quick-btn" data-open="salary">💰 Add Salary</button>
     <button class="quick-btn" data-open="invoice">🧾 New Invoice</button>
   </div>
+
+  <div class="map-wrap">
+    <div class="map-svg-container">
+      <svg width="100%" height="320" viewBox="0 0 320 320" style="overflow:visible">
+        <!-- Route Lines -->
+        <!-- Karachi -> Quetta -->
+        <path d="M50,280 L90,170" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="4" stroke-linecap="round"/>
+        <path d="M50,280 L90,170" fill="none" stroke="#ffbe3d" stroke-width="1.5" class="route-path" opacity="0.6"/>
+        
+        <!-- Karachi -> Multan -> Lahore -->
+        <path d="M50,280 L180,200 L250,150" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="4" stroke-linecap="round"/>
+        <path d="M50,280 L180,200 L250,150" fill="none" stroke="#3DDC97" stroke-width="1.5" class="route-path" opacity="0.6"/>
+        
+        <!-- Lahore -> Islamabad -->
+        <path d="M250,150 L280,90" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="4" stroke-linecap="round"/>
+        <path d="M250,150 L280,90" fill="none" stroke="#58a6ff" stroke-width="1.5" class="route-path" opacity="0.6"/>
+        
+        <!-- Islamabad -> Peshawar -->
+        <path d="M280,90 L230,60" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="4" stroke-linecap="round"/>
+        <path d="M280,90 L230,60" fill="none" stroke="#ff8a3d" stroke-width="1.5" class="route-path" opacity="0.6"/>
+
+        <!-- Terminals (Pulsing Circles) -->
+        <!-- Karachi -->
+        <g class="pulse-glow-green" style="color:#3DDC97">
+          <circle cx="50" cy="280" r="7" fill="#3DDC97"/>
+          <circle cx="50" cy="280" r="14" fill="none" stroke="#3DDC97" stroke-width="1" opacity="0.5"/>
+        </g>
+        <text x="50" y="300" fill="#8898b8" font-size="9" font-weight="bold" font-family="sans-serif" text-anchor="middle">Karachi Hub</text>
+        
+        <!-- Quetta -->
+        <g class="pulse-glow-green" style="color:#ffbe3d">
+          <circle cx="90" cy="170" r="5" fill="#ffbe3d"/>
+        </g>
+        <text x="80" y="165" fill="#8898b8" font-size="9" font-family="sans-serif" text-anchor="end">Quetta Depot</text>
+        
+        <!-- Multan -->
+        <g class="pulse-glow-green" style="color:#3DDC97">
+          <circle cx="180" cy="200" r="5" fill="#3DDC97"/>
+        </g>
+        <text x="192" y="208" fill="#8898b8" font-size="9" font-family="sans-serif">Multan Stn</text>
+        
+        <!-- Lahore -->
+        <g class="pulse-glow-green" style="color:#3DDC97">
+          <circle cx="250" cy="150" r="6" fill="#3DDC97"/>
+          <circle cx="250" cy="150" r="11" fill="none" stroke="#3DDC97" stroke-width="1" opacity="0.4"/>
+        </g>
+        <text x="262" y="154" fill="#8898b8" font-size="9" font-weight="bold" font-family="sans-serif">Lahore HQ</text>
+        
+        <!-- Islamabad -->
+        <g class="pulse-glow-green" style="color:#58a6ff">
+          <circle cx="280" cy="90" r="6" fill="#58a6ff"/>
+          <circle cx="280" cy="90" r="11" fill="none" stroke="#58a6ff" stroke-width="1" opacity="0.4"/>
+        </g>
+        <text x="292" y="94" fill="#8898b8" font-size="9" font-weight="bold" font-family="sans-serif">Islamabad Term</text>
+        
+        <!-- Peshawar -->
+        <g class="pulse-glow-green" style="color:#ff8a3d">
+          <circle cx="230" cy="60" r="5" fill="#ff8a3d"/>
+        </g>
+        <text x="220" y="55" fill="#8898b8" font-size="9" font-family="sans-serif" text-anchor="end">Peshawar Stn</text>
+
+        <!-- Animated Glowing Trucks -->
+        <!-- Karachi -> Lahore -->
+        <g class="map-truck-khi-lhr animated-truck-icon">
+          <rect x="-6" y="-3" width="12" height="6" rx="2" fill="#3DDC97" stroke="#fff" stroke-width="0.5"/>
+          <circle cx="2" cy="0" r="1.5" fill="#fff"/>
+        </g>
+        <!-- Lahore -> Islamabad -->
+        <g class="map-truck-lhr-isb animated-truck-icon">
+          <rect x="-6" y="-3" width="12" height="6" rx="2" fill="#58a6ff" stroke="#fff" stroke-width="0.5"/>
+          <circle cx="2" cy="0" r="1.5" fill="#fff"/>
+        </g>
+        <!-- Karachi -> Quetta -->
+        <g class="map-truck-khi-qta animated-truck-icon">
+          <rect x="-6" y="-3" width="12" height="6" rx="2" fill="#ffbe3d" stroke="#fff" stroke-width="0.5"/>
+          <circle cx="2" cy="0" r="1.5" fill="#fff"/>
+        </g>
+      </svg>
+    </div>
+    <div class="map-sidebar">
+      <div class="section-label" style="margin-bottom:4px;color:#ff8a3d">📡 Live GPS Fleet Tracking</div>
+      <div style="font-size:1.2rem;font-weight:900;margin-bottom:12px;color:var(--text)">Operations Center</div>
+      
+      <div class="map-terminal-indicator">
+        <span>🟢 Karachi Hub</span>
+        <span class="mono muted" style="font-size:.78rem">Active Terminal</span>
+      </div>
+      <div class="map-terminal-indicator">
+        <span>🟢 Lahore HQ</span>
+        <span class="mono muted" style="font-size:.78rem">Active Terminal</span>
+      </div>
+      <div class="map-terminal-indicator">
+        <span>🔵 Islamabad Terminal</span>
+        <span class="mono muted" style="font-size:.78rem">Active Terminal</span>
+      </div>
+      <div class="map-terminal-indicator" style="opacity:0.65">
+        <span>🟡 Quetta Depot</span>
+        <span class="mono muted" style="font-size:.78rem">Standby</span>
+      </div>
+      
+      <div style="margin-top:6px;font-size:.78rem;color:var(--muted);line-height:1.45">
+        📶 Auto-tracking 3 active vehicles along motorways M-2 & M-9. GPS update interval: 2.5s.
+      </div>
+    </div>
+  </div>
+
   <div class="grid4">
     ${kpi(`<span class="kpi-animate" data-target="${activeShips}">${activeShips}</span>`,'Active shipments','#ff8a3d','🚚','In motion')}
     ${kpi(`<span class="kpi-animate" data-target="${Math.round(income/1000)}">Rs ${Math.round(income/1000)}K</span>`,'Total income','#3ddc97','💵','+'+state.transactions.filter(t=>t.type==='income'&&t.month==='Jun').length+' this month')}
