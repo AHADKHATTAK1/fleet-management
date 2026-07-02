@@ -415,19 +415,71 @@ a{color:var(--accent);text-decoration:none}
   .panel,.card-kpi{border:1px solid #ddd!important;background:#f9f9f9!important;box-shadow:none!important}
 }
 
+/* ── MOBILE NAV BAR ── */
+.mobile-nav-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: #091225;
+  border-top: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 999;
+  justify-content: space-around;
+  align-items: center;
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -8px 24px rgba(0,0,0,0.5);
+}
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  flex: 1;
+  padding: 6px 0;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.mobile-nav-item.active {
+  color: var(--accent);
+}
+
 /* ── RESPONSIVE ── */
 @media(max-width:1100px){
-  .app{grid-template-columns:1fr}
-  .sidebar{height:auto;position:static}
   .grid4{grid-template-columns:repeat(2,1fr)}
   .grid3{grid-template-columns:repeat(2,1fr)}
   .ship-layout,.field-row,.field-row3,.login-card{grid-template-columns:1fr}
   .search-box{min-width:100%}
 }
-@media(max-width:620px){
-  .grid4,.grid3,.grid2{grid-template-columns:1fr}
-  .main{padding:14px}
-  .topbar{flex-direction:column;align-items:flex-start}
+@media(max-width:768px){
+  .sidebar { display: none !important; }
+  .app { grid-template-columns: 1fr; }
+  .mobile-nav-bar { display: flex; }
+  .main { padding: 12px 12px 76px; }
+  .grid4, .grid3, .grid2 { grid-template-columns: 1fr; gap: 10px; }
+  .card-kpi { min-height: 90px; padding: 0.85rem; border-radius: 14px; }
+  .kpi-value { font-size: 1.55rem; }
+  .panel { padding: 12px; border-radius: 16px; }
+  .page-title { font-size: 1.6rem; }
+  .topbar { margin-bottom: 12px; gap: 8px; }
+  .topbar-right { width: 100%; justify-content: space-between; gap: 6px; }
+  .search-box { flex: 1; min-width: 0; }
+  .user-pill { display: none; }
+  .table { display: block; overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; }
+}
+@media(max-width:480px){
+  .quick-actions { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 6px !important; }
+  .quick-btn { padding: .6rem .4rem !important; font-size: .78rem !important; margin: 0 !important; width: 100% !important; text-align: center !important; justify-content: center !important; }
 }
 </style>
 </head>
@@ -475,6 +527,7 @@ a{color:var(--accent);text-decoration:none}
     </div>
     <section id="content"></section>
   </main>
+  <nav class="mobile-nav-bar" id="mobileNavBar"></nav>
 </div>
 <div id="modals"></div>
 <div id="toast" class="toast"></div>
@@ -907,6 +960,32 @@ function navView(){
   $('#roleNote').textContent=isAdmin?'Full operations access':'Staff — limited access';
   $('#signOut').onclick=()=>{state.authenticated=false;state.email='';state.displayName='';saveState();render()};
   if($('#sidebarCompany'))$('#sidebarCompany').textContent=state.settings?.companyName||'HBK JADOON';
+  renderMobileNavBar();
+}
+
+function renderMobileNavBar() {
+  const isAdmin = state.role === 'Admin';
+  const items = isAdmin ? [
+    { section: 'Dashboard', label: 'Home', icon: '📊' },
+    { section: 'Shipments', label: 'Trips', icon: '🚚' },
+    { section: 'Optimizer', label: 'Route', icon: '🛣️' },
+    { section: 'Salaries', label: 'Payroll', icon: '💰' },
+    { section: 'Settings', label: 'More', icon: '⚙️' }
+  ] : [
+    { section: 'Dashboard', label: 'Home', icon: '🏠' },
+    { section: 'Shipments', label: 'Trips', icon: '🚚' },
+    { section: 'Stock', label: 'Stock', icon: '📦' },
+    { section: 'Staff', label: 'Profile', icon: '👤' },
+    { section: 'Settings', label: 'More', icon: '⚙️' }
+  ];
+
+  const html = items.map(item => {
+    const active = state.section === item.section ? 'active' : '';
+    return `<button class="mobile-nav-item ${active}" onclick="state.section='${item.section}';render()"><span style="font-size:1.25rem">${item.icon}</span><span style="font-size:0.62rem;margin-top:2px">${item.label}</span></button>`;
+  }).join('');
+  
+  const el = document.getElementById('mobileNavBar');
+  if (el) el.innerHTML = html;
 }
 
 function topView(){
