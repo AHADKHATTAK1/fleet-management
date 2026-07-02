@@ -2724,6 +2724,9 @@ function startTelemetryStream() {
 //  RENDER SYSTEM
 // ══════════════════════════════════════════════════════
 function renderContent(){
+  if (telemetryInterval) { clearInterval(telemetryInterval); telemetryInterval = null; }
+  if (telemetryStreamInterval) { clearInterval(telemetryStreamInterval); telemetryStreamInterval = null; }
+
   if(!state.authenticated){loginView();return;}
   $('#login').classList.add('hidden');
   $('#app').classList.remove('hidden');
