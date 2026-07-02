@@ -665,6 +665,7 @@ const shortDate=()=>new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'
 const fullDate=()=>new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
 const curMonth=()=>new Date().toLocaleString('default',{month:'long'});
 const curYear=()=>new Date().getFullYear();
+const toBase64=file=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.readAsDataURL(file);reader.onload=()=>resolve(reader.result);reader.onerror=e=>reject(e);});
 
 const STATUS_META={
   in_transit:['In Transit','#FF8A3D','rgba(255,138,61,.13)','dot-transit'],
@@ -1365,11 +1366,13 @@ function shipmentsView(){
       ${selected.notes?`<div class="row"><span class="muted">Notes</span><span style="font-size:.85rem">${selected.notes}</span></div>`:''}
       <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
         ${selected.status!=='delivered'?`<button class="btn btn-success btn-sm" data-approve-ship="${selected.id}">✓ Mark Delivered</button>`:''}
+        ${selected.slip?`<a href="${selected.slip}" target="_blank" class="btn btn-info btn-sm" style="background:rgba(88,166,255,.15);color:#58a6ff;border-color:rgba(88,166,255,.25);display:inline-flex;align-items:center;gap:6px">👁️ View Attached Slip</a>`:''}
         ${isAdmin?`<button class="btn btn-info btn-sm" data-gen-invoice="${selected.id}">🧾 Generate Invoice</button>`:''}
         ${isAdmin?`<button class="btn btn-sm" data-edit-ship="${selected.id}">✏️ Edit</button>`:''}
         ${isAdmin?`<button class="btn btn-danger btn-sm" data-del-ship="${selected.id}">🗑 Delete</button>`:''}
       </div>`:`<div class="empty-state"><span class="icon">🚚</span><p>Select a shipment</p></div>`}
     </div>
+  </div>`;
 }
 
 // ══════════════════════════════════════════════════════
@@ -2187,7 +2190,8 @@ function buildModalHTML(){
     <div class="field-row"><div class="field"><label>Driver</label><input id="shipDriver" value="${editShip.driver||''}" placeholder="Driver name"></div><div class="field"><label>Vehicle</label><select id="shipVehicle">${vOpts}</select></div></div>
     <div class="field-row"><div class="field"><label>ETA</label><input id="shipEta" value="${editShip.eta||''}" placeholder="4:30 PM"></div><div class="field"><label>Weight (kg)</label><input id="shipWeight" type="number" value="${editShip.weight||0}"></div></div>
     <div class="field-row"><div class="field"><label>Freight charge (Rs)</label><input id="shipFreight" type="number" value="${editShip.freightCharge||0}"></div><div class="field"><label>Status</label><select id="shipStatus">${['scheduled','in_transit','delayed','delivered'].map(s=>`<option value="${s}" ${(editShip.status||'scheduled')===s?'selected':''}>${STATUS_META[s][0]}</option>`).join('')}</select></div></div>
-    <div class="field"><label>Notes</label><textarea id="shipNotes" rows="2">${editShip.notes||''}</textarea></div>`,
+    <div class="field"><label>Notes</label><textarea id="shipNotes" rows="2">${editShip.notes||''}</textarea></div>
+    <div class="field"><label>Attach Delivery Slip / POD</label><input type="file" id="shipSlipInput" accept="image/*,application/pdf" style="background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.15);border-radius:10px;padding:.5rem;width:100%;color:var(--muted);font-size:.82rem"></div>`,
     `<button class="btn" data-close="shipment">Cancel</button><button class="btn btn-primary" id="saveShipment">${m._editShip!=null?'Save changes':'Add shipment'}</button>`)}
 
   ${modal('modalInvoice',m.invoice,'🧾 New Invoice',`
@@ -2278,9 +2282,21 @@ function wireModals(){
   $$('.modal-backdrop').forEach(bd=>bd.onclick=e=>{if(e.target===bd){const k=bd.id.replace('modal','').toLowerCase();state.modals[k]=false;saveState();render()}});
 
   // SHIPMENT
-  if(m.shipment&&$('#saveShipment'))$('#saveShipment').onclick=()=>{
+  if(m.shipment&&$('#saveShipment'))$('#saveShipment').onclick=async ()=>{
     const client=$('#shipClient').value.trim();if(!client)return toast('Client required','bad');
-    const obj={id:m._editShip!=null?state.shipments[m._editShip].id:`WB-${pad(state.shipments.length+49000)}`,client,origin:$('#shipOrigin').value.trim(),dest:$('#shipDest').value.trim(),status:$('#shipStatus').value,eta:$('#shipEta').value.trim(),driver:$('#shipDriver').value.trim(),vehicle:$('#shipVehicle').value,cargo:$('#shipCargo').value.trim(),weight:+$('#shipWeight').value||0,freightCharge:+$('#shipFreight').value||0,notes:$('#shipNotes').value.trim(),progress:{'scheduled':0,'in_transit':.3,'delayed':.3,'delivered':1}[$('#shipStatus').value]||0};
+    
+    let slip = m._editShip!=null?state.shipments[m._editShip].slip:null;
+    const fileInput = $('#shipSlipInput');
+    if(fileInput && fileInput.files && fileInput.files[0]) {
+      try {
+        toast('⏳ Processing slip file...');
+        slip = await toBase64(fileInput.files[0]);
+      } catch(e) {
+        toast('⚠️ File read failed','bad');
+      }
+    }
+
+    const obj={id:m._editShip!=null?state.shipments[m._editShip].id:`WB-${pad(state.shipments.length+49000)}`,client,origin:$('#shipOrigin').value.trim(),dest:$('#shipDest').value.trim(),status:$('#shipStatus').value,eta:$('#shipEta').value.trim(),driver:$('#shipDriver').value.trim(),vehicle:$('#shipVehicle').value,cargo:$('#shipCargo').value.trim(),weight:+$('#shipWeight').value||0,freightCharge:+$('#shipFreight').value||0,notes:$('#shipNotes').value.trim(),progress:{'scheduled':0,'in_transit':.3,'delayed':.3,'delivered':1}[$('#shipStatus').value]||0,slip};
     if(m._editShip!=null)state.shipments[m._editShip]=obj;else state.shipments.unshift(obj);
     state.selectedShipment=obj.id;state.modals.shipment=false;delete state.modals._editShip;
     logActivity(m._editShip!=null?'Shipment updated':'Shipment added','Shipments',`${obj.id} — ${obj.client}`);
