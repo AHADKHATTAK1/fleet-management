@@ -783,10 +783,10 @@ function animateKPIs(){
 // ══════════════════════════════════════════════════════
 //  AUTH & NAV
 // ══════════════════════════════════════════════════════
-const SECTIONS_ADMIN=['Dashboard','Shipments','Invoices','Clients','Staff','Salaries','Attendance','Vehicles','Fuel Logs','Maintenance','Stock','Receiving','Payments','Reports','Activity Log','Settings','Guide'];
+const SECTIONS_ADMIN=['Dashboard','Shipments','Optimizer','Invoices','Clients','Staff','Salaries','Attendance','Vehicles','Fuel Logs','Maintenance','Stock','Receiving','Payments','Reports','Activity Log','Settings','Guide'];
 const SECTIONS_STAFF=['Dashboard','Shipments','Stock','Receiving','Payments','Reports','Guide'];
-const NAV_ICONS={Dashboard:'📊',Shipments:'🚚',Invoices:'🧾',Clients:'🏢',Staff:'👥',Salaries:'💰',Attendance:'🗓️',Vehicles:'🚛',['Fuel Logs']:'⛽',Maintenance:'🔧',Stock:'📦',Receiving:'📄',Payments:'💳',Reports:'📑',['Activity Log']:'📋',Settings:'⚙️',Guide:'❓'};
-const NAV_GROUPS={Management:['Shipments','Invoices','Clients'],HR:['Staff','Salaries','Attendance'],Fleet:['Vehicles','Fuel Logs','Maintenance'],Operations:['Stock','Receiving','Payments'],Analytics:['Reports','Activity Log'],System:['Settings','Guide']};
+const NAV_ICONS={Dashboard:'📊',Shipments:'🚚',Optimizer:'🛣️',Invoices:'🧾',Clients:'🏢',Staff:'👥',Salaries:'💰',Attendance:'🗓️',Vehicles:'🚛',['Fuel Logs']:'⛽',Maintenance:'🔧',Stock:'📦',Receiving:'📄',Payments:'💳',Reports:'📑',['Activity Log']:'📋',Settings:'⚙️',Guide:'❓'};
+const NAV_GROUPS={Management:['Shipments','Optimizer','Invoices','Clients'],HR:['Staff','Salaries','Attendance'],Fleet:['Vehicles','Fuel Logs','Maintenance'],Operations:['Stock','Receiving','Payments'],Analytics:['Reports','Activity Log'],System:['Settings','Guide']};
 
 function loginView(){
   $('#login').innerHTML=`
@@ -1291,7 +1291,120 @@ function shipmentsView(){
         ${isAdmin?`<button class="btn btn-danger btn-sm" data-del-ship="${selected.id}">🗑 Delete</button>`:''}
       </div>`:`<div class="empty-state"><span class="icon">🚚</span><p>Select a shipment</p></div>`}
     </div>
+}
+
+// ══════════════════════════════════════════════════════
+//  ROUTE OPTIMIZER VIEW
+// ══════════════════════════════════════════════════════
+const optRoutes = {
+  'Karachi-Lahore': { dist: 1210, roads: ['M-9 Motorway', 'M-5 Motorway'], tolls: 3800 },
+  'Karachi-Islamabad': { dist: 1540, roads: ['M-9 Motorway', 'M-5 Motorway', 'M-2 Motorway'], tolls: 5200 },
+  'Karachi-Peshawar': { dist: 1700, roads: ['M-9 Motorway', 'M-5 Motorway', 'M-2 Motorway', 'M-1 Motorway'], tolls: 6100 },
+  'Karachi-Quetta': { dist: 685, roads: ['N-25 Highway'], tolls: 1200 },
+  'Karachi-Multan': { dist: 890, roads: ['M-9 Motorway', 'M-5 Motorway'], tolls: 2800 },
+  'Lahore-Islamabad': { dist: 380, roads: ['M-2 Motorway'], tolls: 1400 },
+  'Lahore-Peshawar': { dist: 530, roads: ['M-2 Motorway', 'M-1 Motorway'], tolls: 2200 },
+  'Lahore-Quetta': { dist: 950, roads: ['N-70 Highway'], tolls: 1900 },
+  'Lahore-Multan': { dist: 330, roads: ['M-3 Motorway'], tolls: 1100 },
+  'Islamabad-Peshawar': { dist: 155, roads: ['M-1 Motorway'], tolls: 800 },
+  'Islamabad-Quetta': { dist: 920, roads: ['CPEC Western Route'], tolls: 2400 },
+  'Islamabad-Multan': { dist: 680, roads: ['M-2 Motorway', 'M-4 Motorway'], tolls: 2500 },
+  'Peshawar-Quetta': { dist: 1040, roads: ['Indus Highway (N-55)'], tolls: 2100 },
+  'Peshawar-Multan': { dist: 830, roads: ['M-1 Motorway', 'M-4 Motorway'], tolls: 3100 },
+  'Multan-Quetta': { dist: 630, roads: ['N-70 Highway'], tolls: 1400 },
+};
+
+function optimizerView(){
+  const cities = ['Karachi', 'Lahore', 'Islamabad', 'Peshawar', 'Quetta', 'Multan'];
+  return `
+  <div class="panel" style="margin-bottom:14px">
+    <div class="section-label" style="color:var(--accent);margin-bottom:6px">🛣️ Pakistan Motorway Route Planner</div>
+    <h2 style="margin-bottom:12px;font-weight:900">Enterprise Cost & Profit Optimizer</h2>
+    <p class="muted" style="font-size:.84rem;line-height:1.5">Select your shipment origin and destination terminals. The optimizer will calculate distance, recommended motorways, toll taxes, fuel consumption, driver allowances, and recommend a profitable freight rate to charge the client.</p>
+  </div>
+  
+  <div class="grid2">
+    <div class="panel">
+      <div class="section-label" style="margin-bottom:12px">Configure Route</div>
+      <div class="modal-body">
+        <div class="field-row">
+          <div class="field"><label>Origin Terminal</label><select id="optOrigin" onchange="calcOpt()">${cities.map(c=>`<option value="${c}">${c} Hub</option>`).join('')}</select></div>
+          <div class="field"><label>Destination Terminal</label><select id="optDest" onchange="calcOpt()">${cities.map(c=>`<option value="${c}" ${c==='Lahore'?'selected':''}>${c} Hub</option>`).join('')}</select></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Vehicle Category</label><select id="optVehType" onchange="calcOpt()"><option value="heavy">Heavy Semi-Truck (3 km/L)</option><option value="medium">Medium Flatbed (5 km/L)</option><option value="light">Delivery Van (9 km/L)</option></select></div>
+          <div class="field"><label>Fuel Rate (per Liter)</label><input id="optFuelRate" type="number" value="${state.settings.fuelRate||285}" oninput="calcOpt()"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Driver Allowance (Rs/Trip)</label><input id="optDriverAllow" type="number" value="6500" oninput="calcOpt()"></div>
+          <div class="field"><label>Target Profit Margin (%)</label><input id="optMargin" type="number" value="25" oninput="calcOpt()"></div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="calcOpt()" style="width:100%;margin-top:14px">⚡ Optimize Route Costs</button>
+    </div>
+
+    <div class="panel" style="border-color:rgba(61,220,151,.25);background:rgba(61,220,151,.02)" id="optResult">
+      <div class="empty-state" style="padding:2rem"><span class="icon">🛣️</span><p>Configure parameters and click calculate</p></div>
+    </div>
   </div>`;
+}
+
+function calcOpt(){
+  const origin = $('#optOrigin').value;
+  const dest = $('#optDest').value;
+  if(origin === dest){
+    $('#optResult').innerHTML = `<div class="empty-state" style="padding:2rem;color:var(--bad)"><span class="icon">⚠️</span><p>Origin and Destination cannot be the same city.</p></div>`;
+    return;
+  }
+  
+  const key = `${origin}-${dest}`;
+  const keyRev = `${dest}-${origin}`;
+  const route = optRoutes[key] || optRoutes[keyRev];
+  if(!route){
+    $('#optResult').innerHTML = `<div class="empty-state" style="padding:2rem;color:var(--warn)"><span class="icon">📍</span><p>Route data not found. Custom estimate generated.</p></div>`;
+    return;
+  }
+
+  const vType = $('#optVehType').value;
+  const fuelRate = +$('#optFuelRate').value || 285;
+  const driverAllow = +$('#optDriverAllow').value || 6500;
+  const targetMargin = +$('#optMargin').value || 25;
+
+  const kmL = vType === 'heavy' ? 3.1 : vType === 'medium' ? 5.2 : 9.5;
+  const fuelNeeded = Math.round(route.dist / kmL);
+  const fuelCost = fuelNeeded * fuelRate;
+  
+  const baseCost = fuelCost + route.tolls + driverAllow;
+  const recommendedFreight = Math.round(baseCost / (1 - (targetMargin / 100)));
+  const netProfit = recommendedFreight - baseCost;
+  
+  $('#optResult').innerHTML = `
+    <div class="section-label" style="color:var(--good);margin-bottom:12px">Optimization Summary</div>
+    <div style="font-size:1.6rem;font-weight:900;color:#fff">${origin} Hub → ${dest} Hub</div>
+    <div class="muted" style="font-size:.8rem;margin-bottom:12.5px;display:flex;gap:10px">
+      <span>🛣️ Motorways: ${route.roads.join(' · ')}</span>
+    </div>
+    
+    <div class="row"><span class="muted">Total Distance</span><span style="font-weight:700" class="mono">${route.dist} km</span></div>
+    <div class="row"><span class="muted">Est. Travel Time</span><span style="font-weight:700" class="mono">${Math.round(route.dist/65)} hrs (Avg 65 km/h)</span></div>
+    
+    <div style="margin:12px 0;border-top:1px dashed var(--line);padding-top:12px">
+      <div class="row"><span class="muted">Estimated Fuel Consumption</span><span class="mono">${fuelNeeded} Liters</span></div>
+      <div class="row"><span class="muted">Fuel Cost (at Rs ${fuelRate}/L)</span><span class="mono">${money(fuelCost)}</span></div>
+      <div class="row"><span class="muted">Toll Taxes (National Highway Authority)</span><span class="mono">${money(route.tolls)}</span></div>
+      <div class="row"><span class="muted">Driver Allowance</span><span class="mono">${money(driverAllow)}</span></div>
+    </div>
+    
+    <div style="background:rgba(255,255,255,.03);border-radius:12px;padding:12px;margin:12px 0;border:1px solid var(--line)">
+      <div class="row" style="border:0;padding:0 0 6px"><span style="font-weight:700">Total Base Operations Cost</span><span style="font-weight:800;color:var(--bad)" class="mono">${money(baseCost)}</span></div>
+      <div class="row" style="border:0;padding:0"><span style="font-weight:700;color:var(--good)">Recommended Freight (Target Margin)</span><span style="font-weight:900;color:var(--good);font-size:1.15rem" class="mono">${money(recommendedFreight)}</span></div>
+    </div>
+    
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:.8rem;color:var(--muted)">
+      <span>Projected Profit Margin: <strong>${targetMargin}%</strong></span>
+      <span>Estimated Net Profit: <strong style="color:var(--good)">${money(netProfit)}</strong></span>
+    </div>
+  `;
 }
 
 function invoicesView(){
@@ -2538,7 +2651,7 @@ function renderContent(){
   navView();topView();
 
   const views={
-    Dashboard:dashboardView,Shipments:shipmentsView,Invoices:invoicesView,
+    Dashboard:dashboardView,Shipments:shipmentsView,Optimizer:optimizerView,Invoices:invoicesView,
     Clients:clientsView,Staff:staffView,Salaries:salariesView,Attendance:attendanceView,
     Vehicles:vehiclesView,['Fuel Logs']:fuelLogsView,Maintenance:maintenanceView,
     Stock:stockView,Receiving:receivingView,Payments:paymentsView,
