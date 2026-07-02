@@ -1,8 +1,9 @@
-const CACHE_NAME = 'hbk-fleet-v1';
+const CACHE_NAME = 'hbk-fleet-v2';
 const ASSETS = [
   './index.html',
+  './portal.html',
   './manifest.json',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap',
+  'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'
 ];
 
