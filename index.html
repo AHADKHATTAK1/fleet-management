@@ -227,9 +227,11 @@ a{color:var(--accent);text-decoration:none}
 .modal-backdrop.show{display:flex;pointer-events:auto}
 .modal{width:min(640px,100%);background:rgba(9,15,28,.99);border:1px solid var(--line);
   border-radius:24px;padding:1.6rem;box-shadow:0 50px 120px rgba(0,0,0,.75);
-  pointer-events:auto;max-height:92vh;overflow-y:auto}
-.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  pointer-events:auto;max-height:92vh;overflow-y:auto;position:relative}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-right:44px}
 .modal-head strong{font-size:1.08rem;font-weight:800}
+.modal-head .icon-btn{position:absolute!important;top:18px;right:18px;border-radius:50%!important;width:34px;height:34px;background:rgba(255,255,255,.04)!important;border:1px solid var(--line)!important;display:grid!important;place-items:center!important;color:var(--muted)!important;z-index:10;transition:all .15s}
+.modal-head .icon-btn:hover{background:rgba(255,255,255,.08)!important;color:var(--text)!important;border-color:rgba(255,138,61,.3)!important}
 .modal-body{display:grid;gap:13px}
 .modal-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
 .field{display:grid;gap:6px}
@@ -569,6 +571,22 @@ a{color:var(--accent);text-decoration:none}
 .ai-input-wrap input:focus {
   border-color: rgba(255,138,61,0.35);
 }
+.ai-header .icon-btn {
+  border-radius: 50%!important;
+  width: 28px!important;
+  height: 28px!important;
+  background: rgba(255,255,255,.04)!important;
+  border: 1px solid rgba(255,255,255,.1)!important;
+  display: grid!important;
+  place-items: center!important;
+  cursor: pointer;
+  color: var(--muted)!important;
+  transition: all .15s;
+}
+.ai-header .icon-btn:hover {
+  background: rgba(255,255,255,.08)!important;
+  color: var(--text)!important;
+}
 
 /* ── MOBILE NAV BAR ── */
 .mobile-nav-bar {
@@ -635,6 +653,9 @@ a{color:var(--accent);text-decoration:none}
 @media(max-width:480px){
   .quick-actions { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 6px !important; }
   .quick-btn { padding: .6rem .4rem !important; font-size: .78rem !important; margin: 0 !important; width: 100% !important; text-align: center !important; justify-content: center !important; }
+  .modal { padding: 1rem !important; border-radius: 20px; }
+  .modal-head { margin-bottom: 12px; }
+  .modal-head .icon-btn { top: 12px; right: 12px; width: 30px; height: 30px; }
 }
 </style>
 </head>
