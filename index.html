@@ -1352,10 +1352,16 @@ function dashboardView(){
         </div>
       </div>
 
-      <!-- Real-time Scrolling Console -->
-      <div id="telemetryFeed" style="background:#03070f;border:1px solid #14223d;border-radius:10px;padding:0.6rem;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:#3ddc97;height:95px;overflow-y:auto;box-shadow:inset 0 0 10px rgba(0,0,0,0.8);line-height:1.4">
-        <div style="color:var(--muted)">[SYSTEM] Initializing telemetry link...</div>
-        <div style="color:#3ddc97">[SYSTEM] GPS uplink connected. Caching route map...</div>
+      <!-- Real-time Interactive Console -->
+      <div style="background:#03070f;border:1px solid #14223d;border-radius:10px;padding:0.5rem;box-shadow:inset 0 0 10px rgba(0,0,0,0.8);display:flex;flex-direction:column;gap:5px;height:100px;overflow:hidden">
+        <div id="telemetryFeed" style="flex:1;font-family:'JetBrains Mono',monospace;font-size:0.66rem;color:#3ddc97;overflow-y:auto;line-height:1.4">
+          <div style="color:var(--muted)">[SYSTEM] Initializing telemetry link...</div>
+          <div style="color:#3ddc97">[SYSTEM] GPS uplink connected. Type /help to test console.</div>
+        </div>
+        <div style="display:flex;align-items:center;border-top:1px solid rgba(255,255,255,0.04);padding-top:4px;font-family:'JetBrains Mono',monospace;font-size:0.66rem;color:#3ddc97">
+          <span style="color:#ff8a3d;margin-right:6px">$</span>
+          <input type="text" id="consoleInput" placeholder="Type /help for diagnostic commands..." onkeydown="handleConsoleKeydown(event)" style="background:transparent;border:0;outline:none;color:#3ddc97;font-family:inherit;font-size:inherit;width:100%;padding:0">
+        </div>
       </div>
     </div>
   </div>
@@ -2890,6 +2896,73 @@ if ('serviceWorker' in navigator) {
       .then(reg => console.log('PWA Service Worker registered:', reg.scope))
       .catch(err => console.error('PWA Service Worker registration failed:', err));
   });
+}
+
+function handleConsoleKeydown(e) {
+  if (e.key !== 'Enter') return;
+  const input = $('#consoleInput');
+  const feed = $('#telemetryFeed');
+  if (!input || !feed) return;
+  
+  const cmd = input.value.trim();
+  input.value = '';
+  if (!cmd) return;
+
+  const userLine = document.createElement('div');
+  userLine.style.color = '#ff8a3d';
+  userLine.textContent = `$ ${cmd}`;
+  feed.appendChild(userLine);
+  
+  const parts = cmd.split(' ');
+  const baseCmd = parts[0].toLowerCase();
+  const arg = parts[1] ? parts[1].toUpperCase() : null;
+
+  const resp = document.createElement('div');
+  resp.style.marginTop = '2px';
+  resp.style.marginBottom = '6px';
+  
+  if (baseCmd === '/help') {
+    resp.innerHTML = `Available commands:<br>` +
+      `• <span style="color:#ffcfaa">/status</span> - Check status of active vehicles<br>` +
+      `• <span style="color:#ffcfaa">/locate [vehicle_id]</span> - GPS satellite locate<br>` +
+      `• <span style="color:#ffcfaa">/oil [vehicle_id]</span> - Check engine oil life<br>` +
+      `• <span style="color:#ffcfaa">/clear</span> - Clear the terminal log screen`;
+  } else if (baseCmd === '/clear') {
+    feed.innerHTML = '';
+    return;
+  } else if (baseCmd === '/status') {
+    resp.innerHTML = `TRK-0731: Active, Moving (82 km/h), Fuel: 74%<br>` +
+      `TRK-0559: Active, Moving (70 km/h), Fuel: 65%<br>` +
+      `TRK-0416: Active, Moving (75 km/h), Temp: 4.2°C, Fuel: 82%`;
+  } else if (baseCmd === '/locate') {
+    if (!arg) {
+      resp.style.color = '#ff5c5c';
+      resp.textContent = `Error: Please specify a vehicle ID. E.g., /locate TRK-0731`;
+    } else {
+      const locationMap = {
+        'TRK-0731': 'Coordinates: 24.8607° N, 67.0011° E (Passing Hyderabad Bypass)',
+        'TRK-0559': 'Coordinates: 31.5204° N, 74.3587° E (Approaching Lahore Toll Plaza)',
+        'TRK-0416': 'Coordinates: 33.6844° N, 73.0479° E (Islamabad Terminal Depot)'
+      };
+      const loc = locationMap[arg] || `Coordinates: 30.1575° N, 71.5249° E (Moving along CPEC motorway corridor)`;
+      resp.innerHTML = `📡 Satellite Link established with ${arg}...<br><span style="color:#ffbe3d">${loc}</span>`;
+    }
+  } else if (baseCmd === '/oil') {
+    if (!arg) {
+      resp.style.color = '#ff5c5c';
+      resp.textContent = `Error: Please specify a vehicle ID. E.g., /oil TRK-0731`;
+    } else {
+      resp.innerHTML = `🔧 Vehicle ${arg} Diagnostics:<br>` +
+        `Oil Level: 92% | Filter Life: 84% | Temperature: NORMAL (85°C)<br>` +
+        `<span style="color:#3DDC97">Status: OPTIMAL</span>`;
+    }
+  } else {
+    resp.style.color = '#ff5c5c';
+    resp.textContent = `Command not recognized. Type /help for list of commands.`;
+  }
+  
+  feed.appendChild(resp);
+  feed.scrollTop = feed.scrollHeight;
 }
 
 // 📡 Real-time GPS Telemetry Stream
