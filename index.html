@@ -605,5 +605,75 @@ function trackCargo() {
 // Initialize tools
 calcEstimate();
 </script>
+<!-- WhatsApp Floating Button -->
+<style>
+  .wa-float {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+  }
+  .wa-tooltip {
+    background: #fff;
+    color: #111;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateX(10px);
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+  }
+  .wa-btn:hover + .wa-tooltip,
+  .wa-float:hover .wa-tooltip {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .wa-btn {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #25D366 60%, #128C7E);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 24px rgba(37,211,102,0.45);
+    cursor: pointer;
+    text-decoration: none;
+    animation: wa-pulse 2.2s infinite;
+    transition: transform 0.2s;
+  }
+  .wa-btn:hover { transform: scale(1.1); }
+  .wa-btn svg { width: 30px; height: 30px; fill: #fff; }
+  @keyframes wa-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(37,211,102,0.5); }
+    70%  { box-shadow: 0 0 0 14px rgba(37,211,102,0); }
+    100% { box-shadow: 0 0 0 0 rgba(37,211,102,0); }
+  }
+  .wa-online-dot {
+    position: absolute;
+    top: 2px; right: 2px;
+    width: 13px; height: 13px;
+    background: #4ade80;
+    border-radius: 50%;
+    border: 2px solid #fff;
+  }
+</style>
+<div class="wa-float">
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="wa-tooltip">Chat with us on WhatsApp!</span>
+    <a class="wa-btn" href="https://wa.me/923000000000?text=Hello%2C%20I%20need%20transport%20services." target="_blank" rel="noopener" title="WhatsApp us" style="position:relative">
+      <div class="wa-online-dot"></div>
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M16 0C7.163 0 0 7.163 0 16c0 2.82.737 5.47 2.027 7.773L0 32l8.489-2.001A15.93 15.93 0 0 0 16 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm0 29.333a13.27 13.27 0 0 1-6.743-1.833l-.484-.287-5.041 1.188 1.237-4.892-.316-.503A13.267 13.267 0 0 1 2.667 16C2.667 8.636 8.636 2.667 16 2.667S29.333 8.636 29.333 16 23.364 29.333 16 29.333zm7.31-9.833c-.4-.2-2.365-1.167-2.732-1.3-.366-.133-.632-.2-.898.2-.267.4-1.032 1.3-1.265 1.567-.233.267-.466.3-.866.1-.4-.2-1.687-.622-3.213-1.982-1.187-1.059-1.99-2.367-2.223-2.767-.234-.4-.025-.616.175-.816.18-.18.4-.467.6-.7.2-.233.267-.4.4-.666.133-.267.067-.5-.033-.7-.1-.2-.898-2.167-1.232-2.967-.324-.78-.654-.674-.898-.686-.233-.011-.5-.013-.766-.013s-.7.1-1.066.5c-.367.4-1.4 1.367-1.4 3.333s1.433 3.867 1.633 4.133c.2.267 2.82 4.307 6.832 6.033.955.412 1.7.659 2.282.844.958.306 1.831.263 2.52.16.769-.115 2.365-.967 2.699-1.9.333-.933.333-1.733.233-1.9-.1-.167-.367-.267-.767-.467z"/></svg>
+    </a>
+  </div>
+</div>
 </body>
 </html>
