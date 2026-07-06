@@ -1019,6 +1019,17 @@ def receiving_view() -> None:
             st.write(f"Date: {slip['date']} | Line items: {slip['items']} | Value: {money(slip['value'])}")
             st.markdown(badge(slip["status"]), unsafe_allow_html=True)
             st.dataframe(st.session_state.receiving_lines.get(slip["id"], []), use_container_width=True, hide_index=True)
+            if slip["status"] != "received":
+                if st.button(f"✓ Approve & Receive {slip['id']}", key=f"approve_{slip['id']}"):
+                    lines = st.session_state.receiving_lines.get(slip["id"], [])
+                    for line in lines:
+                        for stock_item in st.session_state.stock:
+                            if stock_item["item"].lower() in line["name"].lower() or line["name"].lower() in stock_item["item"].lower():
+                                stock_item["qty"] += line["received"]
+                                break
+                    slip["status"] = "received"
+                    st.session_state.toast = f"GRN {slip['id']} approved. Inventory quantities updated!"
+                    st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
 
     if st.session_state.receiving_modal:
