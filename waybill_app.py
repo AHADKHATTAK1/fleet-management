@@ -14,10 +14,10 @@ st.set_page_config(page_title="HAJI BARKAT KHAN JADOON GOODS TRANSPORT", layout=
 
 
 SHIPMENTS = [
-    {"id": "WB-48213", "client": "Northbridge Foods", "origin": "Long Beach, CA", "dest": "Reno, NV", "status": "in transit", "eta": "2:40 PM", "progress": 0.62, "driver": "Maria Okafor", "vehicle": "TRK-0731"},
-    {"id": "WB-48190", "client": "Calder Steel Co.", "origin": "Gary, IN", "dest": "Detroit, MI", "status": "delayed", "eta": "11:15 AM", "progress": 0.41, "driver": "Ricardo Vasquez", "vehicle": "TRK-0559"},
-    {"id": "WB-48177", "client": "Verde Pharma", "origin": "Memphis, TN", "dest": "Atlanta, GA", "status": "delivered", "eta": "Delivered 8:52 AM", "progress": 1.0, "driver": "Sungmin Park", "vehicle": "TRK-0416"},
-    {"id": "WB-48241", "client": "Hallstrom Furniture", "origin": "High Point, NC", "dest": "Columbus, OH", "status": "scheduled", "eta": "6:05 PM", "progress": 0.0, "driver": "Jamal Bell", "vehicle": "TRK-0820"},
+    {"id": "WB-48213", "client": "Northbridge Foods", "origin": "Lahore", "dest": "Karachi", "status": "in transit", "eta": "2:40 PM", "progress": 0.62, "driver": "Ali Raza", "vehicle": "TRK-0731", "cargo": "Dry goods", "weight": 2400, "freightCharge": 62000, "notes": "", "billNo": "BL-9901A", "billDate": "2026-07-02", "partyInvoiceNo": "INV-8821", "partyInvoiceDate": "2026-07-01", "detention": 15000, "items": "Wheat bags, flour boxes", "containerQty": 2, "emptyPickup": "Karachi Port Terminal", "loadContainer": "Lahore Ghee Mill"},
+    {"id": "WB-48190", "client": "Calder Steel Co.", "origin": "Islamabad", "dest": "Peshawar", "status": "delayed", "eta": "11:15 AM", "progress": 0.41, "driver": "Imran Khan", "vehicle": "TRK-0559", "cargo": "Steel rods", "weight": 5000, "freightCharge": 48000, "notes": "Road block near Attock", "billNo": "BL-9902B", "billDate": "2026-07-03", "partyInvoiceNo": "INV-8822", "partyInvoiceDate": "2026-07-02", "detention": 0, "items": "Steel rods, iron beams", "containerQty": 3, "emptyPickup": "Peshawar Depot", "loadContainer": "Islamabad Steel Mill"},
+    {"id": "WB-48177", "client": "Verde Pharma", "origin": "Faisalabad", "dest": "Quetta", "status": "delivered", "eta": "Delivered 8:52 AM", "progress": 1.0, "driver": "Sajid Mehmood", "vehicle": "TRK-0416", "cargo": "Medicine", "weight": 800, "freightCharge": 47500, "notes": "", "billNo": "BL-9903C", "billDate": "2026-06-30", "partyInvoiceNo": "INV-8823", "partyInvoiceDate": "2026-06-28", "detention": 8000, "items": "Pharmaceutical syrups, vaccines", "containerQty": 1, "emptyPickup": "Quetta Dry Port", "loadContainer": "Faisalabad Pharma Complex"},
+    {"id": "WB-48241", "client": "Hallstrom Furniture", "origin": "Multan", "dest": "Rawalpindi", "status": "scheduled", "eta": "6:05 PM", "progress": 0.0, "driver": "Zubair Ahmed", "vehicle": "TRK-0820", "cargo": "Furniture", "weight": 3200, "freightCharge": 38000, "notes": "", "billNo": "", "billDate": "", "partyInvoiceNo": "", "partyInvoiceDate": "", "detention": 0, "items": "Wooden sofa sets, office chairs", "containerQty": 1, "emptyPickup": "Rawalpindi Terminal", "loadContainer": "Multan Furniture Hub"},
 ]
 
 STOCK = [
@@ -86,7 +86,7 @@ STATUS_META = {
 
 
 def money(value: int | float) -> str:
-    return f"${value:,.0f}"
+    return f"Rs {value:,.0f}"
 
 
 def badge(status: str) -> str:
@@ -519,12 +519,15 @@ def seed_state() -> None:
     st.session_state.setdefault("email", "")
     st.session_state.setdefault("display_name", "")
     st.session_state.setdefault("section", "📊 Dashboard")
+    st.session_state.setdefault("shipments", [row.copy() for row in SHIPMENTS])
     st.session_state.setdefault("stock", [row.copy() for row in STOCK])
     st.session_state.setdefault("receiving", [row.copy() for row in RECEIVING])
     st.session_state.setdefault("receiving_lines", {key: [row.copy() for row in rows] for key, rows in RECEIVING_LINES.items()})
     st.session_state.setdefault("transactions", [row.copy() for row in TRANSACTIONS])
     st.session_state.setdefault("staff", [row.copy() for row in STAFF])
-    st.session_state.setdefault("selected_shipment", SHIPMENTS[0]["id"])
+    st.session_state.setdefault("selected_shipment", st.session_state.shipments[0]["id"])
+    st.session_state.setdefault("shipment_modal", False)
+    st.session_state.setdefault("edit_shipment_modal", False)
     st.session_state.setdefault("toast", "")
     st.session_state.setdefault("stock_modal", False)
     st.session_state.setdefault("receiving_modal", False)
@@ -644,7 +647,7 @@ def dashboard() -> None:
     expense = sum(tx["amount"] for tx in st.session_state.transactions if tx["type"] == "expense")
     low_stock = sum(1 for item in st.session_state.stock if item["qty"] < item["reorder"])
     pending_grn = sum(1 for slip in st.session_state.receiving if slip["status"] != "received")
-    active_shipments = sum(1 for shipment in SHIPMENTS if shipment["status"] == "in transit")
+    active_shipments = sum(1 for shipment in st.session_state.shipments if shipment["status"] == "in transit")
     staff_on_shift = sum(1 for person in st.session_state.staff if person["status"] == "active")
 
     last_icon = "💰" if st.session_state.role == "Admin" else "👥"
@@ -689,7 +692,7 @@ def dashboard() -> None:
     left, right = st.columns(2)
     with left:
         shipment_rows = []
-        for shipment in SHIPMENTS:
+        for shipment in st.session_state.shipments:
             if shipment["status"] == "delivered":
                 continue
             badge_html = badge(shipment["status"])
@@ -735,58 +738,249 @@ def dashboard() -> None:
 
 def shipments_view() -> None:
     query = st.session_state.get("search_query", "").strip().lower()
-    filtered = [shipment for shipment in SHIPMENTS if not query or any(query in str(shipment[field]).lower() for field in ("id", "client", "origin", "dest"))]
-    left, right = st.columns([1, 1.35])
+    filtered = [
+        shipment for shipment in st.session_state.shipments
+        if not query or any(query in str(shipment.get(field, "")).lower() for field in ("id", "client", "origin", "dest", "billNo", "partyInvoiceNo", "items"))
+    ]
+    
+    left, right = st.columns([1.1, 1.25])
     with left:
+        st.markdown('<div class="waybill-card" style="margin-bottom:12px">', unsafe_allow_html=True)
+        c_btn1, c_btn2 = st.columns(2)
+        with c_btn1:
+            if st.button("➕ New Shipment", use_container_width=True):
+                st.session_state.shipment_modal = not st.session_state.shipment_modal
+                st.session_state.edit_shipment_modal = False
+        with c_btn2:
+            if st.button("✏️ Edit Selected", use_container_width=True):
+                st.session_state.edit_shipment_modal = not st.session_state.edit_shipment_modal
+                st.session_state.shipment_modal = False
+        st.markdown('</div>', unsafe_allow_html=True)
+
         st.markdown('<div class="waybill-card">', unsafe_allow_html=True)
-        for shipment in filtered:
-            if st.button(f"{shipment['id']} — {shipment['client']}", key=f"ship_{shipment['id']}", use_container_width=True):
-                st.session_state.selected_shipment = shipment["id"]
+        if not filtered:
+            st.info("No shipments found matching search query.")
+        else:
+            for shipment in filtered:
+                btn_lbl = f"{shipment['id']} — {shipment['client']}"
+                if st.button(btn_lbl, key=f"ship_{shipment['id']}", use_container_width=True):
+                    st.session_state.selected_shipment = shipment["id"]
+                    st.session_state.edit_shipment_modal = False
         st.markdown("</div>", unsafe_allow_html=True)
-    selected = next((item for item in SHIPMENTS if item["id"] == st.session_state.selected_shipment), SHIPMENTS[0])
-    with right:
-        progress_pct = int(selected["progress"] * 100)
-        progress_color = STATUS_META.get(selected["status"], STATUS_META["pending"])[1]
         
-        detail_html = f"""
-        <div class="waybill-card" style="padding: 1.5rem 1.8rem;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
-            <div>
-              <span class="mono badge" style="background: rgba(255,255,255,0.03); color: #dce5ff; border: 1px solid rgba(255,255,255,0.08); font-size: 0.82rem; padding: 0.25rem 0.65rem;">{selected['id']}</span>
-              <h2 style="margin: 8px 0 0 0; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text);">{selected['client']}</h2>
+        if st.session_state.shipment_modal:
+            st.markdown('<div class="waybill-card">', unsafe_allow_html=True)
+            st.subheader("➕ New Shipment")
+            with st.form("new_shipment_form", clear_on_submit=True):
+                client = st.text_input("Client")
+                c1, c2 = st.columns(2)
+                origin = c1.text_input("Origin City", value="Lahore")
+                dest = c2.text_input("Destination City", value="Karachi")
+                c3, c4 = st.columns(2)
+                driver = c3.text_input("Driver", value="Ali Raza")
+                vehicle = c4.text_input("Vehicle", value="TRK-0731")
+                c5, c6 = st.columns(2)
+                eta = c5.text_input("ETA", value="4:00 PM")
+                weight = c6.number_input("Weight (kg)", min_value=0, value=2500)
+                c7, c8 = st.columns(2)
+                freight = c7.number_input("Freight Charge (Rs)", min_value=0, value=65000)
+                status = c8.selectbox("Status", ["scheduled", "in transit", "delayed", "delivered"])
+                
+                st.write("📦 Container & Transit Details")
+                items = st.text_input("Items inside Container", value="Dry goods")
+                c_qty = st.number_input("Container Qty", min_value=1, value=1)
+                c9, c10 = st.columns(2)
+                empty_pickup = c9.text_input("Empty Pickup to Location", value="Karachi Port Terminal")
+                load_container = c10.text_input("Load Container Location", value="Lahore Ghee Mill")
+                
+                st.write("🧾 Billing & Detention Details")
+                c11, c12 = st.columns(2)
+                bill_no = c11.text_input("Bill#", value="BL-")
+                bill_date = c12.date_input("Bill Date", value=date.today())
+                c13, c14 = st.columns(2)
+                inv_no = c13.text_input("Party Invoice#", value="INV-")
+                inv_date = c14.date_input("Party Invoice Date", value=date.today())
+                detention = st.number_input("Detention Charges (Rs)", min_value=0, value=0)
+                
+                notes = st.text_area("Notes")
+                
+                submitted = st.form_submit_button("Add Shipment", type="primary")
+                if submitted and client:
+                    new_id = f"WB-{48242 + len(st.session_state.shipments)}"
+                    progress = {"scheduled": 0.0, "in transit": 0.3, "delayed": 0.3, "delivered": 1.0}[status]
+                    st.session_state.shipments.insert(0, {
+                        "id": new_id, "client": client, "origin": origin, "dest": dest,
+                        "status": status, "eta": eta, "progress": progress, "driver": driver, "vehicle": vehicle,
+                        "cargo": items, "weight": weight, "freightCharge": freight, "notes": notes,
+                        "billNo": bill_no, "billDate": str(bill_date), "partyInvoiceNo": inv_no, "partyInvoiceDate": str(inv_date),
+                        "detention": detention, "items": items, "containerQty": c_qty, "emptyPickup": empty_pickup, "loadContainer": load_container
+                    })
+                    st.session_state.shipment_modal = False
+                    st.session_state.selected_shipment = new_id
+                    st.session_state.toast = f"Created shipment {new_id}"
+                    st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+    selected = next((item for item in st.session_state.shipments if item["id"] == st.session_state.selected_shipment), None)
+    if not selected and st.session_state.shipments:
+        selected = st.session_state.shipments[0]
+        
+    with right:
+        if st.session_state.edit_shipment_modal and selected:
+            st.markdown('<div class="waybill-card">', unsafe_allow_html=True)
+            st.subheader(f"✏️ Edit Shipment {selected['id']}")
+            with st.form("edit_shipment_form"):
+                client = st.text_input("Client", value=selected.get("client", ""))
+                c1, c2 = st.columns(2)
+                origin = c1.text_input("Origin", value=selected.get("origin", ""))
+                dest = c2.text_input("Destination", value=selected.get("dest", ""))
+                c3, c4 = st.columns(2)
+                driver = c3.text_input("Driver", value=selected.get("driver", ""))
+                vehicle = c4.text_input("Vehicle", value=selected.get("vehicle", ""))
+                c5, c6 = st.columns(2)
+                eta = c5.text_input("ETA", value=selected.get("eta", ""))
+                weight = c6.number_input("Weight (kg)", min_value=0, value=int(selected.get("weight", 0)))
+                c7, c8 = st.columns(2)
+                freight = c7.number_input("Freight Charge (Rs)", min_value=0, value=int(selected.get("freightCharge", 0)))
+                
+                cur_status = selected.get("status", "scheduled")
+                status_options = ["scheduled", "in transit", "delayed", "delivered"]
+                status_idx = status_options.index(cur_status) if cur_status in status_options else 0
+                status = c8.selectbox("Status", status_options, index=status_idx)
+                
+                st.write("📦 Container & Transit Details")
+                items = st.text_input("Items inside Container", value=selected.get("items", ""))
+                c_qty = st.number_input("Container Qty", min_value=1, value=int(selected.get("containerQty", 1)))
+                c9, c10 = st.columns(2)
+                empty_pickup = c9.text_input("Empty Pickup to Location", value=selected.get("emptyPickup", ""))
+                load_container = c10.text_input("Load Container Location", value=selected.get("loadContainer", ""))
+                
+                st.write("🧾 Billing & Detention Details")
+                c11, c12 = st.columns(2)
+                bill_no = c11.text_input("Bill#", value=selected.get("billNo", ""))
+                try:
+                    b_date = date.fromisoformat(selected.get("billDate", "")) if selected.get("billDate") else date.today()
+                except ValueError:
+                    b_date = date.today()
+                bill_date = c12.date_input("Bill Date", value=b_date)
+                
+                c13, c14 = st.columns(2)
+                inv_no = c13.text_input("Party Invoice#", value=selected.get("partyInvoiceNo", ""))
+                try:
+                    i_date = date.fromisoformat(selected.get("partyInvoiceDate", "")) if selected.get("partyInvoiceDate") else date.today()
+                except ValueError:
+                    i_date = date.today()
+                inv_date = c14.date_input("Party Invoice Date", value=i_date)
+                detention = st.number_input("Detention Charges (Rs)", min_value=0, value=int(selected.get("detention", 0)))
+                
+                notes = st.text_area("Notes", value=selected.get("notes", ""))
+                
+                submitted = st.form_submit_button("Save Changes", type="primary")
+                if submitted and client:
+                    progress = {"scheduled": 0.0, "in transit": 0.3, "delayed": 0.3, "delivered": 1.0}[status]
+                    for idx, item in enumerate(st.session_state.shipments):
+                        if item["id"] == selected["id"]:
+                            st.session_state.shipments[idx] = {
+                                "id": selected["id"], "client": client, "origin": origin, "dest": dest,
+                                "status": status, "eta": eta, "progress": progress, "driver": driver, "vehicle": vehicle,
+                                "cargo": items, "weight": weight, "freightCharge": freight, "notes": notes,
+                                "billNo": bill_no, "billDate": str(bill_date), "partyInvoiceNo": inv_no, "partyInvoiceDate": str(inv_date),
+                                "detention": detention, "items": items, "containerQty": c_qty, "emptyPickup": empty_pickup, "loadContainer": load_container
+                            }
+                            break
+                    st.session_state.edit_shipment_modal = False
+                    st.session_state.toast = f"Saved changes to {selected['id']}"
+                    st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+        elif selected:
+            progress_pct = int(selected["progress"] * 100)
+            progress_color = STATUS_META.get(selected["status"], STATUS_META["pending"])[1]
+            
+            detail_html = f"""
+            <div class="waybill-card" style="padding: 1.5rem 1.8rem;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                <div>
+                  <span class="mono badge" style="background: rgba(255,255,255,0.03); color: #dce5ff; border: 1px solid rgba(255,255,255,0.08); font-size: 0.82rem; padding: 0.25rem 0.65rem;">{selected['id']}</span>
+                  <h2 style="margin: 8px 0 0 0; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text);">{selected['client']}</h2>
+                </div>
+                {badge(selected['status'])}
+              </div>
+              
+              <div style="margin: 24px 0 16px 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--muted); margin-bottom: 8px; font-weight: 600;">
+                  <span>Route Progress</span>
+                  <span>{progress_pct}%</span>
+                </div>
+                <div style="height: 8px; width: 100%; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; position: relative;">
+                  <div style="height: 100%; width: {progress_pct}%; background: {progress_color}; border-radius: 99px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);"></div>
+                </div>
+              </div>
+              
+              <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                <span style="color: var(--muted); font-size: 0.9rem;">Route</span>
+                <strong style="color: var(--text); font-size: 0.9rem;">{selected['origin']} &rarr; {selected['dest']}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                <span style="color: var(--muted); font-size: 0.9rem;">ETA</span>
+                <strong style="color: var(--text); font-size: 0.9rem; display: flex; align-items: center; gap: 4px;">🕒 {selected['eta']}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                <span style="color: var(--muted); font-size: 0.9rem;">Driver</span>
+                <strong style="color: var(--text); font-size: 0.9rem;">{selected['driver']}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                <span style="color: var(--muted); font-size: 0.9rem;">Vehicle ID</span>
+                <strong class="mono" style="color: var(--text); font-size: 0.9rem; background: rgba(255,255,255,0.04); padding: 2px 6px; border-radius: 4px;">{selected['vehicle']}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                <span style="color: var(--muted); font-size: 0.9rem;">Cargo Weight</span>
+                <strong style="color: var(--text); font-size: 0.9rem;">{selected.get('weight', 0)} kg</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                <span style="color: var(--muted); font-size: 0.9rem;">Freight Charge</span>
+                <strong style="color: #3DDC97; font-size: 0.9rem;">{money(selected.get('freightCharge', 0))}</strong>
+              </div>
+              {f'<div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);"><span style="color: var(--muted); font-size: 0.9rem;">Notes</span><strong style="color: var(--text); font-size: 0.9rem;">{selected["notes"]}</strong></div>' if selected.get("notes") else ''}
+              
+              <div style="border-top: 1px solid rgba(255,255,255,0.04); margin-top: 16px; padding-top: 16px; text-align: left;">
+                <div style="font-weight: 700; font-size: 0.78rem; color: #ff8a3d; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">📦 Container & Transit Details</div>
+                <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+                  <span style="color: var(--muted); font-size: 0.85rem;">Items</span>
+                  <strong style="color: var(--text); font-size: 0.85rem;">{selected.get('items', '—') or '—'}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+                  <span style="color: var(--muted); font-size: 0.85rem;">Container Quantity</span>
+                  <strong style="color: var(--text); font-size: 0.85rem;">{selected.get('containerQty', '—') or '—'}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+                  <span style="color: var(--muted); font-size: 0.85rem;">Empty Pickup</span>
+                  <strong style="color: var(--text); font-size: 0.85rem;">{selected.get('emptyPickup', '—') or '—'}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+                  <span style="color: var(--muted); font-size: 0.85rem;">Load Container</span>
+                  <strong style="color: var(--text); font-size: 0.85rem;">{selected.get('loadContainer', '—') or '—'}</strong>
+                </div>
+              </div>
+              
+              <div style="border-top: 1px solid rgba(255,255,255,0.04); margin-top: 12px; padding-top: 12px; text-align: left;">
+                <div style="font-weight: 700; font-size: 0.78rem; color: #ff8a3d; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">🧾 Billing & Detention Details</div>
+                <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+                  <span style="color: var(--muted); font-size: 0.85rem;">Bill# / Date</span>
+                  <strong style="color: var(--text); font-size: 0.85rem;">{f"{selected.get('billNo')} / {selected.get('billDate')}" if selected.get('billNo') else '—'}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+                  <span style="color: var(--muted); font-size: 0.85rem;">Party Invoice# / Date</span>
+                  <strong style="color: var(--text); font-size: 0.85rem;">{f"{selected.get('partyInvoiceNo')} / {selected.get('partyInvoiceDate')}" if selected.get('partyInvoiceNo') else '—'}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+                  <span style="color: var(--muted); font-size: 0.85rem;">Detention</span>
+                  <strong style="color: #3DDC97; font-size: 0.85rem;">{money(selected.get('detention', 0) or 0)}</strong>
+                </div>
+              </div>
             </div>
-            {badge(selected['status'])}
-          </div>
-          
-          <div style="margin: 24px 0 16px 0;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--muted); margin-bottom: 8px; font-weight: 600;">
-              <span>Route Progress</span>
-              <span>{progress_pct}%</span>
-            </div>
-            <div style="height: 8px; width: 100%; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; position: relative;">
-              <div style="height: 100%; width: {progress_pct}%; background: {progress_color}; border-radius: 99px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);"></div>
-            </div>
-          </div>
-          
-          <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
-            <span style="color: var(--muted); font-size: 0.9rem;">Route</span>
-            <strong style="color: var(--text); font-size: 0.9rem;">{selected['origin']} &rarr; {selected['dest']}</strong>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
-            <span style="color: var(--muted); font-size: 0.9rem;">ETA</span>
-            <strong style="color: var(--text); font-size: 0.9rem; display: flex; align-items: center; gap: 4px;">🕒 {selected['eta']}</strong>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
-            <span style="color: var(--muted); font-size: 0.9rem;">Driver</span>
-            <strong style="color: var(--text); font-size: 0.9rem;">{selected['driver']}</strong>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 12px 0;">
-            <span style="color: var(--muted); font-size: 0.9rem;">Vehicle ID</span>
-            <strong class="mono" style="color: var(--text); font-size: 0.9rem; background: rgba(255,255,255,0.04); padding: 2px 6px; border-radius: 4px;">{selected['vehicle']}</strong>
-          </div>
-        </div>
-        """
-        st.markdown(detail_html, unsafe_allow_html=True)
+            """
+            st.markdown(detail_html, unsafe_allow_html=True)
 
 
 def stock_view() -> None:

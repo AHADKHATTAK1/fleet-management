@@ -670,7 +670,7 @@ a{color:var(--accent);text-decoration:none}
             <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm12 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-7l2.25 3H17V11.5h2.5z"/>
           </svg>
         </div>
-        <div><div class="brand-name" id="sidebarCompany" style="letter-spacing:0.02em;font-size:0.86rem;font-weight:900;color:#fff">HBK JADOON</div><div class="brand-sub" style="letter-spacing:0.18em;font-size:0.6rem;color:#ff9e22;font-weight:800">LOGISTICS GROUP</div></div>
+        <div><div class="brand-name" id="sidebarCompany" style="letter-spacing:0.02em;font-size:0.86rem;font-weight:900;color:#fff">HBK JADOON</div><div class="brand-sub" style="letter-spacing:0.18em;font-size:0.6rem;color:#ff9e22;font-weight:800">GOODS TRANSPORT</div></div>
       </div>
       <nav class="nav" id="nav"></nav>
     </div>
@@ -721,7 +721,7 @@ a{color:var(--accent);text-decoration:none}
     </div>
     <div class="ai-messages" id="aiMessages">
       <div class="ai-msg bot">
-        Assalam-o-Alaikum! I am **Jadoon AI**, your logistics assistant. I can check shipments, search inventory, calculate profit margins, or optimize motorway routes. Ask me anything!
+        Assalam-o-Alaikum! I am **Jadoon AI**, your transport assistant. I can check shipments, search inventory, calculate profit margins, or optimize motorway routes. Ask me anything!
       </div>
     </div>
     <div class="ai-suggestions">
@@ -744,12 +744,12 @@ a{color:var(--accent);text-decoration:none}
 const SK='hbk_adv_v5';
 
 const SEED={
-  settings:{companyName:'HBK JADOON LOGISTICS',companyFull:'HBK Jadoon Logistics Group & Goods Transport',address:'Plot 24, Hub Center, Karachi',phone:'021-3456789',email:'info@hbkjadoon.pk',currency:'Rs',fuelRate:285,taxRate:0,logo:'HBK'},
+  settings:{companyName:'HBK JADOON TRANSPORT',companyFull:'HBK Jadoon Goods Transport',address:'Plot 24, Hub Center, Karachi',phone:'021-3456789',email:'info@hbkjadoon.pk',currency:'Rs',fuelRate:285,taxRate:0,logo:'HBK'},
   shipments:[
-    {id:'WB-48213',client:'Northbridge Foods',origin:'Lahore',dest:'Karachi',status:'in_transit',eta:'2:40 PM',progress:.62,driver:'Ali Raza',vehicle:'TRK-0731',cargo:'Dry goods',weight:2400,freightCharge:62000,notes:''},
-    {id:'WB-48190',client:'Calder Steel Co.',origin:'Islamabad',dest:'Peshawar',status:'delayed',eta:'11:15 AM',progress:.41,driver:'Imran Khan',vehicle:'TRK-0559',cargo:'Steel rods',weight:5000,freightCharge:48000,notes:'Road block near Attock'},
-    {id:'WB-48177',client:'Verde Pharma',origin:'Faisalabad',dest:'Quetta',status:'delivered',eta:'Delivered 8:52 AM',progress:1,driver:'Sajid Mehmood',vehicle:'TRK-0416',cargo:'Medicine',weight:800,freightCharge:47500,notes:''},
-    {id:'WB-48241',client:'Hallstrom Furniture',origin:'Multan',dest:'Rawalpindi',status:'scheduled',eta:'6:05 PM',progress:0,driver:'Zubair Ahmed',vehicle:'TRK-0820',cargo:'Furniture',weight:3200,freightCharge:38000,notes:''},
+    {id:'WB-48213',client:'Northbridge Foods',origin:'Lahore',dest:'Karachi',status:'in_transit',eta:'2:40 PM',progress:.62,driver:'Ali Raza',vehicle:'TRK-0731',cargo:'Dry goods',weight:2400,freightCharge:62000,notes:'',billNo:'BL-9901A',billDate:'2026-07-02',partyInvoiceNo:'INV-8821',partyInvoiceDate:'2026-07-01',detention:15000,items:'Wheat bags, flour boxes',containerQty:2,emptyPickup:'Karachi Port Terminal',loadContainer:'Lahore Ghee Mill'},
+    {id:'WB-48190',client:'Calder Steel Co.',origin:'Islamabad',dest:'Peshawar',status:'delayed',eta:'11:15 AM',progress:.41,driver:'Imran Khan',vehicle:'TRK-0559',cargo:'Steel rods',weight:5000,freightCharge:48000,notes:'Road block near Attock',billNo:'BL-9902B',billDate:'2026-07-03',partyInvoiceNo:'INV-8822',partyInvoiceDate:'2026-07-02',detention:0,items:'Steel rods, iron beams',containerQty:3,emptyPickup:'Peshawar Depot',loadContainer:'Islamabad Steel Mill'},
+    {id:'WB-48177',client:'Verde Pharma',origin:'Faisalabad',dest:'Quetta',status:'delivered',eta:'Delivered 8:52 AM',progress:1,driver:'Sajid Mehmood',vehicle:'TRK-0416',cargo:'Medicine',weight:800,freightCharge:47500,notes:'',billNo:'BL-9903C',billDate:'2026-06-30',partyInvoiceNo:'INV-8823',partyInvoiceDate:'2026-06-28',detention:8000,items:'Pharmaceutical syrups, vaccines',containerQty:1,emptyPickup:'Quetta Dry Port',loadContainer:'Faisalabad Pharma Complex'},
+    {id:'WB-48241',client:'Hallstrom Furniture',origin:'Multan',dest:'Rawalpindi',status:'scheduled',eta:'6:05 PM',progress:0,driver:'Zubair Ahmed',vehicle:'TRK-0820',cargo:'Furniture',weight:3200,freightCharge:38000,notes:'',billNo:'',billDate:'',partyInvoiceNo:'',partyInvoiceDate:'',detention:0,items:'Wooden sofa sets, office chairs',containerQty:1,emptyPickup:'Rawalpindi Terminal',loadContainer:'Multan Furniture Hub'},
   ],
   stock:[
     {sku:'PLT-1180',item:'Standard pallets (48x40)',warehouse:'Karachi DC',qty:412,reorder:150,unit:'pcs'},
@@ -1541,7 +1541,7 @@ function shipmentsView(){
   const q=state.search.trim().toLowerCase();
   // Staff only see their own shipments; Admin sees all
   const allShips=isAdmin?state.shipments:state.shipments.filter(s=>!person||s.driver===person.name);
-  const filtered=allShips.filter(s=>!q||[s.id,s.client,s.origin,s.dest,s.driver,s.vehicle].some(v=>(v||'').toLowerCase().includes(q)));
+  const filtered=allShips.filter(s=>!q||[s.id,s.client,s.origin,s.dest,s.driver,s.vehicle,s.billNo,s.partyInvoiceNo,s.items,s.emptyPickup,s.loadContainer].some(v=>(v||'').toLowerCase().includes(q)));
   const selected=filtered.find(s=>s.id===state.selectedShipment)||filtered[0];
   if(!filtered.length)return `<div class="panel"><div class="section-head"><div class="section-label">Shipments</div>${isAdmin?'<button class="btn btn-primary" data-open="shipment">+ New shipment</button>':''}</div><div class="empty-state"><span class="icon">🚚</span><p>${isAdmin?'No shipments yet':'No shipments assigned to you yet'}</p></div></div>`;
   const sm=STATUS_META[selected?.status]||STATUS_META.pending;
@@ -1587,6 +1587,19 @@ function shipmentsView(){
       <div class="row"><span class="muted">Weight</span><strong>${selected.weight?selected.weight+' kg':'—'}</strong></div>
       <div class="row"><span class="muted">Freight charge</span><strong style="color:var(--good)">${money(selected.freightCharge||0)}</strong></div>
       ${selected.notes?`<div class="row"><span class="muted">Notes</span><span style="font-size:.85rem">${selected.notes}</span></div>`:''}
+      <div style="border-top:1px solid rgba(255,255,255,.05);margin-top:14px;padding-top:14px">
+        <div style="font-weight:700;font-size:.76rem;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">📦 Container & Transit Details</div>
+        <div class="row"><span class="muted">Items in Container</span><strong>${selected.items||'—'}</strong></div>
+        <div class="row"><span class="muted">Container Quantity</span><strong>${selected.containerQty||'—'}</strong></div>
+        <div class="row"><span class="muted">Empty Pickup</span><strong>${selected.emptyPickup||'—'}</strong></div>
+        <div class="row"><span class="muted">Load Container</span><strong>${selected.loadContainer||'—'}</strong></div>
+      </div>
+      <div style="border-top:1px solid rgba(255,255,255,.05);margin-top:10px;padding-top:10px">
+        <div style="font-weight:700;font-size:.76rem;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">🧾 Billing & Detention Details</div>
+        <div class="row"><span class="muted">Bill# / Date</span><strong>${selected.billNo?selected.billNo+' / '+(selected.billDate||'—'):'—'}</strong></div>
+        <div class="row"><span class="muted">Party Invoice# / Date</span><strong>${selected.partyInvoiceNo?selected.partyInvoiceNo+' / '+(selected.partyInvoiceDate||'—'):'—'}</strong></div>
+        <div class="row"><span class="muted">Detention Charges</span><strong style="color:var(--good)">${money(selected.detention||0)}</strong></div>
+      </div>
       <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
         ${selected.status!=='delivered'?`<button class="btn btn-success btn-sm" data-approve-ship="${selected.id}">✓ Mark Delivered</button>`:''}
         ${selected.slip?`<a href="${selected.slip}" target="_blank" class="btn btn-info btn-sm" style="background:rgba(88,166,255,.15);color:#58a6ff;border-color:rgba(88,166,255,.25);display:inline-flex;align-items:center;gap:6px">👁️ View Attached Slip</a>`:''}
@@ -2419,7 +2432,13 @@ function buildModalHTML(){
     <div class="field-row"><div class="field"><label>ETA</label><input id="shipEta" value="${editShip.eta||''}" placeholder="4:30 PM"></div><div class="field"><label>Weight (kg)</label><input id="shipWeight" type="number" value="${editShip.weight||0}"></div></div>
     <div class="field-row"><div class="field"><label>Freight charge (Rs)</label><input id="shipFreight" type="number" value="${editShip.freightCharge||0}"></div><div class="field"><label>Status</label><select id="shipStatus">${['scheduled','in_transit','delayed','delivered'].map(s=>`<option value="${s}" ${(editShip.status||'scheduled')===s?'selected':''}>${STATUS_META[s][0]}</option>`).join('')}</select></div></div>
     <div class="field"><label>Notes</label><textarea id="shipNotes" rows="2">${editShip.notes||''}</textarea></div>
-    <div class="field"><label>Attach Delivery Slip / POD</label><input type="file" id="shipSlipInput" accept="image/*,application/pdf" style="background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.15);border-radius:10px;padding:.5rem;width:100%;color:var(--muted);font-size:.82rem"></div>`,
+    <div style="border-top:1px solid rgba(255,255,255,.05);margin:14px 0 10px;padding-top:10px;font-weight:700;font-size:.78rem;color:var(--accent);text-transform:uppercase;letter-spacing:.05em">📦 Container & Transit Details</div>
+    <div class="field-row"><div class="field"><label>Items in Container</label><input id="shipItems" value="${editShip.items||''}" placeholder="e.g. Wheat bags, iron coils"></div><div class="field"><label>Container Quantity</label><input id="shipContainerQty" type="number" value="${editShip.containerQty||1}"></div></div>
+    <div class="field-row"><div class="field"><label>Empty Pickup to</label><input id="shipEmptyPickup" value="${editShip.emptyPickup||''}" placeholder="Karachi Port Terminal"></div><div class="field"><label>Load Container Location</label><input id="shipLoadContainer" value="${editShip.loadContainer||''}" placeholder="Lahore Warehouse Yard"></div></div>
+    <div style="border-top:1px solid rgba(255,255,255,.05);margin:14px 0 10px;padding-top:10px;font-weight:700;font-size:.78rem;color:var(--accent);text-transform:uppercase;letter-spacing:.05em">🧾 Billing & Detention Details</div>
+    <div class="field-row"><div class="field"><label>Bill#</label><input id="shipBillNo" value="${editShip.billNo||''}" placeholder="BL-XXXXX"></div><div class="field"><label>Bill Date</label><input id="shipBillDate" type="date" value="${editShip.billDate||''}"></div></div>
+    <div class="field-row"><div class="field"><label>Party Invoice#</label><input id="shipPartyInvoiceNo" value="${editShip.partyInvoiceNo||''}" placeholder="INV-XXXXX"></div><div class="field"><label>Party Invoice Date</label><input id="shipPartyInvoiceDate" type="date" value="${editShip.partyInvoiceDate||''}"></div></div>
+    <div class="field-row"><div class="field"><label>Detention Charges (Rs)</label><input id="shipDetention" type="number" value="${editShip.detention||0}"></div><div class="field"><label>Attach POD</label><input type="file" id="shipSlipInput" accept="image/*,application/pdf" style="background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.15);border-radius:10px;padding:.3rem .5rem;width:100%;color:var(--muted);font-size:.82rem"></div></div>`,
     `<button class="btn" data-close="shipment">Cancel</button><button class="btn btn-primary" id="saveShipment">${m._editShip!=null?'Save changes':'Add shipment'}</button>`)}
 
   ${modal('modalInvoice',m.invoice,'🧾 New Invoice',`
@@ -2524,7 +2543,31 @@ function wireModals(){
       }
     }
 
-    const obj={id:m._editShip!=null?state.shipments[m._editShip].id:`WB-${pad(state.shipments.length+49000)}`,client,origin:$('#shipOrigin').value.trim(),dest:$('#shipDest').value.trim(),status:$('#shipStatus').value,eta:$('#shipEta').value.trim(),driver:$('#shipDriver').value.trim(),vehicle:$('#shipVehicle').value,cargo:$('#shipCargo').value.trim(),weight:+$('#shipWeight').value||0,freightCharge:+$('#shipFreight').value||0,notes:$('#shipNotes').value.trim(),progress:{'scheduled':0,'in_transit':.3,'delayed':.3,'delivered':1}[$('#shipStatus').value]||0,slip};
+    const obj={
+      id:m._editShip!=null?state.shipments[m._editShip].id:`WB-${pad(state.shipments.length+49000)}`,
+      client,
+      origin:$('#shipOrigin').value.trim(),
+      dest:$('#shipDest').value.trim(),
+      status:$('#shipStatus').value,
+      eta:$('#shipEta').value.trim(),
+      driver:$('#shipDriver').value.trim(),
+      vehicle:$('#shipVehicle').value,
+      cargo:$('#shipCargo').value.trim(),
+      weight:+$('#shipWeight').value||0,
+      freightCharge:+$('#shipFreight').value||0,
+      notes:$('#shipNotes').value.trim(),
+      progress:{'scheduled':0,'in_transit':.3,'delayed':.3,'delivered':1}[$('#shipStatus').value]||0,
+      slip,
+      billNo:$('#shipBillNo').value.trim(),
+      billDate:$('#shipBillDate').value.trim(),
+      partyInvoiceNo:$('#shipPartyInvoiceNo').value.trim(),
+      partyInvoiceDate:$('#shipPartyInvoiceDate').value.trim(),
+      detention:+$('#shipDetention').value||0,
+      items:$('#shipItems').value.trim(),
+      containerQty:+$('#shipContainerQty').value||1,
+      emptyPickup:$('#shipEmptyPickup').value.trim(),
+      loadContainer:$('#shipLoadContainer').value.trim()
+    };
     if(m._editShip!=null)state.shipments[m._editShip]=obj;else state.shipments.unshift(obj);
     state.selectedShipment=obj.id;state.modals.shipment=false;delete state.modals._editShip;
     logActivity(m._editShip!=null?'Shipment updated':'Shipment added','Shipments',`${obj.id} — ${obj.client}`);
