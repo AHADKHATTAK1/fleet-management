@@ -788,7 +788,7 @@ def shipments_view() -> None:
                 
                 st.write("📦 Container & Transit Details")
                 items = st.text_input("Items inside Container", value="Dry goods")
-                c_qty = st.number_input("Container Qty", min_value=1, value=1)
+                c_qty = st.text_input("Container Qty", value="1")
                 c9, c10 = st.columns(2)
                 empty_pickup = c9.text_input("Empty Pickup to Location", value="Karachi Port Terminal")
                 load_container = c10.text_input("Load Container Location", value="Lahore Ghee Mill")
@@ -800,7 +800,7 @@ def shipments_view() -> None:
                 c13, c14 = st.columns(2)
                 inv_no = c13.text_input("Party Invoice#", value="INV-")
                 inv_date = c14.date_input("Party Invoice Date", value=date.today())
-                detention = st.number_input("Detention Charges (Rs)", min_value=0, value=0)
+                detention = st.text_input("Detention Charges (Rs)", value="0")
                 
                 notes = st.text_area("Notes")
                 
@@ -850,7 +850,7 @@ def shipments_view() -> None:
                 
                 st.write("📦 Container & Transit Details")
                 items = st.text_input("Items inside Container", value=selected.get("items", ""))
-                c_qty = st.number_input("Container Qty", min_value=1, value=int(selected.get("containerQty", 1)))
+                c_qty = st.text_input("Container Qty", value=str(selected.get("containerQty", "1")))
                 c9, c10 = st.columns(2)
                 empty_pickup = c9.text_input("Empty Pickup to Location", value=selected.get("emptyPickup", ""))
                 load_container = c10.text_input("Load Container Location", value=selected.get("loadContainer", ""))
@@ -871,7 +871,7 @@ def shipments_view() -> None:
                 except ValueError:
                     i_date = date.today()
                 inv_date = c14.date_input("Party Invoice Date", value=i_date)
-                detention = st.number_input("Detention Charges (Rs)", min_value=0, value=int(selected.get("detention", 0)))
+                detention = st.text_input("Detention Charges (Rs)", value=str(selected.get("detention", "0")))
                 
                 notes = st.text_area("Notes", value=selected.get("notes", ""))
                 
@@ -897,6 +897,12 @@ def shipments_view() -> None:
             progress_pct = int(selected["progress"] * 100)
             progress_color = STATUS_META.get(selected["status"], STATUS_META["pending"])[1]
             
+            det_val = selected.get('detention', '0')
+            try:
+                det_display = money(float(det_val))
+            except (ValueError, TypeError):
+                det_display = str(det_val)
+                
             detail_html = f"""
             <div class="waybill-card" style="padding: 1.5rem 1.8rem;">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
@@ -975,7 +981,7 @@ def shipments_view() -> None:
                 </div>
                 <div style="display: flex; justify-content: space-between; padding: 6px 0;">
                   <span style="color: var(--muted); font-size: 0.85rem;">Detention</span>
-                  <strong style="color: #3DDC97; font-size: 0.85rem;">{money(selected.get('detention', 0) or 0)}</strong>
+                  <strong style="color: #3DDC97; font-size: 0.85rem;">{det_display}</strong>
                 </div>
               </div>
             </div>

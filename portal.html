@@ -1598,7 +1598,7 @@ function shipmentsView(){
         <div style="font-weight:700;font-size:.76rem;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">🧾 Billing & Detention Details</div>
         <div class="row"><span class="muted">Bill# / Date</span><strong>${selected.billNo?selected.billNo+' / '+(selected.billDate||'—'):'—'}</strong></div>
         <div class="row"><span class="muted">Party Invoice# / Date</span><strong>${selected.partyInvoiceNo?selected.partyInvoiceNo+' / '+(selected.partyInvoiceDate||'—'):'—'}</strong></div>
-        <div class="row"><span class="muted">Detention Charges</span><strong style="color:var(--good)">${money(selected.detention||0)}</strong></div>
+        <div class="row"><span class="muted">Detention Charges</span><strong style="color:var(--good)">${isNaN(Number(selected.detention)) ? (selected.detention || '—') : money(selected.detention || 0)}</strong></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
         ${selected.status!=='delivered'?`<button class="btn btn-success btn-sm" data-approve-ship="${selected.id}">✓ Mark Delivered</button>`:''}
@@ -2562,9 +2562,9 @@ function wireModals(){
       billDate:$('#shipBillDate').value.trim(),
       partyInvoiceNo:$('#shipPartyInvoiceNo').value.trim(),
       partyInvoiceDate:$('#shipPartyInvoiceDate').value.trim(),
-      detention:+$('#shipDetention').value||0,
+      detention:$('#shipDetention').value.trim()||'0',
       items:$('#shipItems').value.trim(),
-      containerQty:+$('#shipContainerQty').value||1,
+      containerQty:$('#shipContainerQty').value.trim()||'1',
       emptyPickup:$('#shipEmptyPickup').value.trim(),
       loadContainer:$('#shipLoadContainer').value.trim()
     };
