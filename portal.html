@@ -1754,9 +1754,9 @@ function invoicesView(){
           <td class="muted">${inv.dueDate||'—'}</td>
           <td>${badge(inv.status)}</td>
           <td><div style="display:flex;gap:6px">
-            <button class="btn btn-sm btn-info" data-print-invoice="${i}">🖨️ Print</button>
-            ${inv.status==='unpaid'?`<button class="btn btn-success btn-sm" data-pay-invoice="${i}">✓ Mark Paid</button>`:''}
-            <button class="icon-btn btn-danger" data-del-invoice="${i}">🗑</button>
+            <button class="btn btn-sm btn-info" data-print-invoice="${inv.id}">🖨️ Print</button>
+            ${inv.status==='unpaid'?`<button class="btn btn-success btn-sm" data-pay-invoice="${inv.id}">✓ Mark Paid</button>`:''}
+            <button class="icon-btn btn-danger" data-del-invoice="${inv.id}">🗑</button>
           </div></td>
         </tr>`).join('')}
       </tbody>
@@ -1774,7 +1774,7 @@ function clientsView(){
     <td>${c.contact}</td><td class="mono" style="font-size:.82rem">${c.phone}</td><td>${c.city}</td>
     <td><span style="background:rgba(255,138,61,.12);color:#ff8a3d;padding:.2rem .55rem;border-radius:7px;font-weight:700;font-size:.8rem">${c.activeShipments}</span></td>
     <td style="color:var(--good);font-weight:700">${money(c.totalValue)}</td>
-    <td><div style="display:flex;gap:5px"><button class="icon-btn" data-edit-client="${i}">✏️</button><button class="icon-btn btn-danger" data-del-client="${i}">🗑</button></div></td>
+    <td><div style="display:flex;gap:5px"><button class="icon-btn" data-edit-client="${c.id}">✏️</button><button class="icon-btn btn-danger" data-del-client="${c.id}">🗑</button></div></td>
   </tr>`).join('')}</tbody></table></div>`;
 }
 
@@ -1818,7 +1818,7 @@ function staffView(){
           </div>
           ${s.status==='paid'?`<div style="color:var(--good);font-size:.78rem;margin-top:6px">✅ Paid on ${s.paidDate}</div>`:''}
           ${s.notes?`<div style="background:rgba(255,255,255,.04);border-radius:8px;padding:.5rem;margin-top:6px;font-size:.78rem">📝 ${s.notes}</div>`:''}
-          <button class="btn btn-sm btn-info" style="margin-top:8px" data-print-slip="${state.salaries.indexOf(s)}">🖨️ Print Slip</button>
+          <button class="btn btn-sm btn-info" style="margin-top:8px" data-print-slip="${s.id}">🖨️ Print Slip</button>
         </div>`).join(''):'<div class="empty-state" style="padding:1.5rem"><span class="icon">💰</span><p>No salary records found</p></div>'}
       </div>
     </div>`;
@@ -1834,8 +1834,8 @@ function staffView(){
     <td><div class="mono" style="font-size:.8rem">${p.phone||'—'}</div><div class="muted" style="font-size:.72rem">${p.cnic||'—'}</div></td>
     <td><div style="font-weight:700;color:var(--good)">${money(p.salary)}</div><div class="muted" style="font-size:.73rem">+${money(p.allowance)} allow.</div></td>
     <td><span style="background:${p.access==='Admin'?'rgba(255,190,61,.14)':'rgba(61,220,151,.1)'};color:${p.access==='Admin'?'#ffbe3d':'#3ddc97'};padding:.2rem .55rem;border-radius:7px;font-size:.76rem;font-weight:700">${p.access}</span></td>
-    <td><button class="badge" style="cursor:pointer;color:${p.status==='active'?'#3ddc97':'#ff5c5c'};background:${p.status==='active'?'rgba(61,220,151,.13)':'rgba(255,92,92,.13)'};border:0" data-toggle-staff="${i}"><span class="status-dot ${p.status==='active'?'dot-active':'dot-delayed'}"></span>${p.status}</button></td>
-    <td><div style="display:flex;gap:5px"><button class="icon-btn" data-edit-staff="${i}">✏️</button><button class="icon-btn btn-danger" data-del-staff="${i}">🗑</button><button class="icon-btn btn-success" data-print-salslip="${i}" title="Salary slip">💰</button></div></td>
+    <td><button class="badge" style="cursor:pointer;color:${p.status==='active'?'#3ddc97':'#ff5c5c'};background:${p.status==='active'?'rgba(61,220,151,.13)':'rgba(255,92,92,.13)'};border:0" data-toggle-staff="${p.id}"><span class="status-dot ${p.status==='active'?'dot-active':'dot-delayed'}"></span>${p.status}</button></td>
+    <td><div style="display:flex;gap:5px"><button class="icon-btn" data-edit-staff="${p.id}">✏️</button><button class="icon-btn btn-danger" data-del-staff="${p.id}">🗑</button><button class="icon-btn btn-success" data-print-salslip="${p.id}" title="Salary slip">💰</button></div></td>
   </tr>`).join('')}</tbody></table></div>`;
 }
 
@@ -1856,7 +1856,7 @@ function salariesView(){
       <td style="color:#ff9090">${s.deduction?'-'+money(s.deduction):'—'}</td>
       <td style="font-weight:900;font-size:1rem">${money(s.total)}</td>
       <td>${badge(s.status)}${s.paidDate?`<div class="muted" style="font-size:.72rem">Paid ${s.paidDate}</div>`:''}</td>
-      <td><button class="btn btn-sm btn-info" data-print-slip="${state.salaries.indexOf(s)}">🖨️ Slip</button></td>
+      <td><button class="btn btn-sm btn-info" data-print-slip="${s.id}">🖨️ Slip</button></td>
     </tr>`).join('')}</tbody></table>`:'<div class="empty-state" style="padding:2rem"><span class="icon">💰</span><p>No salary records found</p><p class="muted" style="font-size:.82rem">Contact Admin to add your salary records</p></div>'}
     </div>`;
   }
@@ -1879,9 +1879,9 @@ function salariesView(){
     <td style="font-weight:900;font-size:1rem">${money(s.total)}</td>
     <td>${badge(s.status)}</td>
     <td><div style="display:flex;gap:5px">
-      ${s.status==='unpaid'?`<button class="btn btn-success btn-sm" data-pay-salary="${i}">✓ Pay</button>`:`<span class="muted" style="font-size:.74rem">Paid ${s.paidDate}</span>`}
-      <button class="btn btn-sm btn-info" data-print-slip="${i}">🖨️ Slip</button>
-      <button class="icon-btn btn-danger" data-del-salary="${i}">🗑</button>
+      ${s.status==='unpaid'?`<button class="btn btn-success btn-sm" data-pay-salary="${s.id}">✓ Pay</button>`:`<span class="muted" style="font-size:.74rem">Paid ${s.paidDate}</span>`}
+      <button class="btn btn-sm btn-info" data-print-slip="${s.id}">🖨️ Slip</button>
+      <button class="icon-btn btn-danger" data-del-salary="${s.id}">🗑</button>
     </div></td>
   </tr>`).join('')}</tbody></table></div>`;
 }
@@ -1970,7 +1970,7 @@ function attendanceView(){
         <td style="font-weight:600">${a.staffName}</td>
         <td class="mono" style="font-size:.8rem">${a.date}</td>
         <td>${badge(a.status==='present'?'active':a.status==='absent'?'suspended':'scheduled')}</td>
-        <td><button class="icon-btn btn-danger" data-del-att="${state.attendance.length-1-i}">🗑</button></td>
+        <td><button class="icon-btn btn-danger" data-del-att="${a.id}">🗑</button></td>
       </tr>`).join('')}
     </tbody></table>
   </div>`;
@@ -2003,7 +2003,7 @@ function vehiclesView(){
         ${overdue?`<div style="color:var(--bad);font-size:.72rem;font-weight:700;margin-top:3px">⚠️ SERVICE DUE!</div>`:''}
       </td>
       <td>${overdue?badge('overdue'):badge(v.status)}</td>
-      <td><div style="display:flex;gap:5px"><button class="icon-btn" data-edit-vehicle="${i}">✏️</button><button class="icon-btn btn-danger" data-del-vehicle="${i}">🗑</button></div></td>
+      <td><div style="display:flex;gap:5px"><button class="icon-btn" data-edit-vehicle="${v.id}">✏️</button><button class="icon-btn btn-danger" data-del-vehicle="${v.id}">🗑</button></div></td>
     </tr>`;
   }).join('')}</tbody></table></div>`;
 }
@@ -2023,7 +2023,7 @@ function fuelLogsView(){
     <td style="font-weight:700;color:var(--good)">${money(f.total)}</td>
     <td class="mono" style="font-size:.8rem">${(f.odometer||0).toLocaleString()} km</td>
     <td style="font-size:.82rem">${f.station||'—'}</td>
-    <td><button class="icon-btn btn-danger" data-del-fuel="${i}">🗑</button></td>
+    <td><button class="icon-btn btn-danger" data-del-fuel="${f.id}">🗑</button></td>
   </tr>`).join('')}</tbody></table></div>`;
 }
 
@@ -2040,7 +2040,7 @@ function maintenanceView(){
     <td style="font-weight:600">${m.type}</td><td style="color:var(--good);font-weight:700">${money(m.cost)}</td>
     <td class="muted">${m.nextDue||'—'}</td><td style="font-size:.8rem">${m.notes||'—'}</td>
     <td>${badge(m.status)}</td>
-    <td><button class="icon-btn btn-danger" data-del-mnt="${i}">🗑</button></td>
+    <td><button class="icon-btn btn-danger" data-del-mnt="${m.id}">🗑</button></td>
   </tr>`).join('')}</tbody></table></div>`;
 }
 
@@ -2058,7 +2058,7 @@ function stockView(){
     <td class="mono" style="color:#ffcfaa">${s.sku}</td><td style="font-weight:600">${s.item}</td>
     <td>${s.warehouse}</td><td style="font-weight:700">${s.qty} ${s.unit}</td>
     <td class="muted">${s.reorder} ${s.unit}</td><td>${badge(s.qty<s.reorder?'pending':'active')}</td>
-    ${isAdmin?`<td><button class="icon-btn btn-danger" data-del-stock="${i}">🗑</button></td>`:''}
+    ${isAdmin?`<td><button class="icon-btn btn-danger" data-del-stock="${s.sku}">🗑</button></td>`:''}
   </tr>`).join('')}</tbody></table></div>
   <div class="panel" style="margin-top:14px"><div class="section-head"><div class="section-label">Stock movements</div><button class="btn btn-primary" data-open="movement">+ New movement</button></div>
   <table class="table"><thead><tr><th>ID</th><th>SKU</th><th>Type</th><th>Qty</th><th>Source</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
@@ -2115,7 +2115,7 @@ function paymentsView(){
     <td class="muted">${t.date}</td>
     <td style="font-weight:800;color:${t.type==='income'?'var(--good)':'#ffb1b1'}">${t.type==='income'?'+':'-'}${money(t.amount)}</td>
     ${isAdmin?`<td>${badge(t.type==='income'?'active':'suspended')}</td>`:''}
-    <td>${isAdmin?`<button class="icon-btn btn-danger" data-del-txn="${i}">🗑</button>`:''}</td>
+    <td>${isAdmin?`<button class="icon-btn btn-danger" data-del-txn="${t.id}">🗑</button>`:''}</td>
   </tr>`).join('')}</tbody></table></div>`;
 }
 
@@ -2679,13 +2679,31 @@ function wireModals(){
   $$('[data-approve-movement]').forEach(b=>b.onclick=()=>{const mv=state.stockMovements.find(m=>m.id===b.dataset.approveMovement);if(!mv)return;const si=state.stock.find(s=>s.sku===mv.sku);if(si){if(mv.type==='in')si.qty=(si.qty||0)+(mv.qty||0);else si.qty=Math.max(0,(si.qty||0)-(mv.qty||0));}mv.status='approved';saveState();toast(`${mv.id} approved`);render()});
 
   // PAY SALARY
-  $$('[data-pay-salary]').forEach(b=>b.onclick=()=>{const i=+b.dataset.paySalary;const sal=state.salaries[i];sal.status='paid';sal.paidDate=shortDate();state.transactions.unshift({id:`TXN-${pad(state.transactions.length+9010)}`,type:'expense',desc:`Salary — ${sal.staffName} (${sal.month} ${sal.year})`,date:shortDate(),amount:sal.total,category:'Salary',month:new Date().toLocaleString('default',{month:'short'}),year:new Date().getFullYear()});logActivity('Salary paid','Salaries',`${sal.staffName} — ${money(sal.total)}`);saveState();toast(`${sal.staffName} salary paid`);render()});
+  $$('[data-pay-salary]').forEach(b=>b.onclick=()=>{
+    const sal=state.salaries.find(x=>x.id===b.dataset.paySalary);
+    if(!sal)return;
+    sal.status='paid';
+    sal.paidDate=shortDate();
+    state.transactions.unshift({id:`TXN-${pad(state.transactions.length+9010)}`,type:'expense',desc:`Salary — ${sal.staffName} (${sal.month} ${sal.year})`,date:shortDate(),amount:sal.total,category:'Salary',month:new Date().toLocaleString('default',{month:'short'}),year:new Date().getFullYear()});
+    logActivity('Salary paid','Salaries',`${sal.staffName} — ${money(sal.total)}`);
+    saveState();toast(`${sal.staffName} salary paid`);render();
+  });
 
   // PAY INVOICE
-  $$('[data-pay-invoice]').forEach(b=>b.onclick=()=>{const i=+b.dataset.payInvoice;state.invoices[i].status='paid';const inv=state.invoices[i];state.transactions.unshift({id:`TXN-${pad(state.transactions.length+9010)}`,type:'income',desc:`Invoice ${inv.id} — ${inv.client}`,date:shortDate(),amount:inv.amount,category:'Freight',month:new Date().toLocaleString('default',{month:'short'}),year:new Date().getFullYear()});logActivity('Invoice paid','Invoices',`${inv.id} — ${money(inv.amount)}`);saveState();toast(`${inv.id} marked paid`);render()});
+  $$('[data-pay-invoice]').forEach(b=>b.onclick=()=>{
+    const inv=state.invoices.find(x=>x.id===b.dataset.payInvoice);
+    if(!inv)return;
+    inv.status='paid';
+    state.transactions.unshift({id:`TXN-${pad(state.transactions.length+9010)}`,type:'income',desc:`Invoice ${inv.id} — ${inv.client}`,date:shortDate(),amount:inv.amount,category:'Freight',month:new Date().toLocaleString('default',{month:'short'}),year:new Date().getFullYear()});
+    logActivity('Invoice paid','Invoices',`${inv.id} — ${money(inv.amount)}`);
+    saveState();toast(`${inv.id} marked paid`);render();
+  });
 
   // PRINT INVOICE
-  $$('[data-print-invoice]').forEach(b=>b.onclick=()=>{const inv=state.invoices[+b.dataset.printInvoice];if(inv)printInvoice(inv)});
+  $$('[data-print-invoice]').forEach(b=>b.onclick=()=>{
+    const inv=state.invoices.find(x=>x.id===b.dataset.printInvoice);
+    if(inv)printInvoice(inv);
+  });
 
   // GENERATE INVOICE FROM SHIPMENT
   $$('[data-gen-invoice]').forEach(b=>b.onclick=()=>{
@@ -2695,15 +2713,23 @@ function wireModals(){
   });
 
   // PRINT SALARY SLIP
-  $$('[data-print-slip]').forEach(b=>b.onclick=()=>{const sal=state.salaries[+b.dataset.printSlip];if(sal)printSalarySlip(sal)});
+  $$('[data-print-slip]').forEach(b=>b.onclick=()=>{
+    const sal=state.salaries.find(x=>x.id===b.dataset.printSlip);
+    if(sal)printSalarySlip(sal);
+  });
   $$('[data-print-salslip]').forEach(b=>b.onclick=()=>{
-    const person=state.staff[+b.dataset.printSalslip];if(!person)return;
+    const person=state.staff.find(x=>x.id===b.dataset.printSalslip);if(!person)return;
     const latestSal=state.salaries.filter(s=>s.staffId===person.id)[0];
     if(latestSal)printSalarySlip(latestSal);else toast('No salary record found for this employee','bad');
   });
 
   // TOGGLE STAFF STATUS
-  $$('[data-toggle-staff]').forEach(b=>b.onclick=()=>{const i=+b.dataset.toggleStaff;state.staff[i].status=state.staff[i].status==='active'?'suspended':'active';saveState();render()});
+  $$('[data-toggle-staff]').forEach(b=>b.onclick=()=>{
+    const person=state.staff.find(x=>x.id===b.dataset.toggleStaff);
+    if(!person)return;
+    person.status=person.status==='active'?'suspended':'active';
+    saveState();render();
+  });
 
   // ATTENDANCE TOGGLE
   $$('[data-att-staff]').forEach(btn=>btn.onclick=()=>{
@@ -2717,23 +2743,70 @@ function wireModals(){
   });
 
   // DELETE BUTTONS
-  $$('[data-del-att]').forEach(b=>b.onclick=()=>{state.attendance.splice(+b.dataset.delAtt,1);saveState();render()});
+  $$('[data-del-att]').forEach(b=>b.onclick=()=>{
+    state.attendance=state.attendance.filter(x=>x.id!==b.dataset.delAtt);
+    saveState();render();
+  });
   $$('[data-del-ship]').forEach(b=>b.onclick=()=>{if(!confirm('Delete shipment?'))return;state.shipments=state.shipments.filter(s=>s.id!==b.dataset.delShip);saveState();toast('Deleted','bad');render()});
-  $$('[data-del-client]').forEach(b=>b.onclick=()=>{if(!confirm('Delete client?'))return;state.clients.splice(+b.dataset.delClient,1);saveState();toast('Deleted','bad');render()});
-  $$('[data-del-staff]').forEach(b=>b.onclick=()=>{if(!confirm('Delete staff member?'))return;state.staff.splice(+b.dataset.delStaff,1);saveState();toast('Deleted','bad');render()});
-  $$('[data-del-salary]').forEach(b=>b.onclick=()=>{if(!confirm('Delete salary record?'))return;state.salaries.splice(+b.dataset.delSalary,1);saveState();toast('Deleted','bad');render()});
-  $$('[data-del-vehicle]').forEach(b=>b.onclick=()=>{if(!confirm('Delete vehicle?'))return;state.vehicles.splice(+b.dataset.delVehicle,1);saveState();toast('Deleted','bad');render()});
-  $$('[data-del-fuel]').forEach(b=>b.onclick=()=>{state.fuelLogs.splice(+b.dataset.delFuel,1);saveState();toast('Deleted','bad');render()});
-  $$('[data-del-mnt]').forEach(b=>b.onclick=()=>{state.maintenance.splice(+b.dataset.delMnt,1);saveState();toast('Deleted','bad');render()});
-  $$('[data-del-stock]').forEach(b=>b.onclick=()=>{state.stock.splice(+b.dataset.delStock,1);saveState();toast('Deleted','bad');render()});
-  $$('[data-del-txn]').forEach(b=>b.onclick=()=>{state.transactions.splice(+b.dataset.delTxn,1);saveState();toast('Deleted','bad');render()});
-  $$('[data-del-invoice]').forEach(b=>b.onclick=()=>{if(!confirm('Delete invoice?'))return;state.invoices.splice(+b.dataset.delInvoice,1);saveState();toast('Deleted','bad');render()});
+  $$('[data-del-client]').forEach(b=>b.onclick=()=>{
+    if(!confirm('Delete client?'))return;
+    state.clients=state.clients.filter(x=>x.id!==b.dataset.delClient);
+    saveState();toast('Deleted','bad');render();
+  });
+  $$('[data-del-staff]').forEach(b=>b.onclick=()=>{
+    if(!confirm('Delete staff member?'))return;
+    state.staff=state.staff.filter(x=>x.id!==b.dataset.delStaff);
+    saveState();toast('Deleted','bad');render();
+  });
+  $$('[data-del-salary]').forEach(b=>b.onclick=()=>{
+    if(!confirm('Delete salary record?'))return;
+    state.salaries=state.salaries.filter(x=>x.id!==b.dataset.delSalary);
+    saveState();toast('Deleted','bad');render();
+  });
+  $$('[data-del-vehicle]').forEach(b=>b.onclick=()=>{
+    if(!confirm('Delete vehicle?'))return;
+    state.vehicles=state.vehicles.filter(x=>x.id!==b.dataset.delVehicle);
+    saveState();toast('Deleted','bad');render();
+  });
+  $$('[data-del-fuel]').forEach(b=>b.onclick=()=>{
+    state.fuelLogs=state.fuelLogs.filter(x=>x.id!==b.dataset.delFuel);
+    saveState();toast('Deleted','bad');render();
+  });
+  $$('[data-del-mnt]').forEach(b=>b.onclick=()=>{
+    state.maintenance=state.maintenance.filter(x=>x.id!==b.dataset.delMnt);
+    saveState();toast('Deleted','bad');render();
+  });
+  $$('[data-del-stock]').forEach(b=>b.onclick=()=>{
+    state.stock=state.stock.filter(x=>x.sku!==b.dataset.delStock);
+    saveState();toast('Deleted','bad');render();
+  });
+  $$('[data-del-txn]').forEach(b=>b.onclick=()=>{
+    state.transactions=state.transactions.filter(x=>x.id!==b.dataset.delTxn);
+    saveState();toast('Deleted','bad');render();
+  });
+  $$('[data-del-invoice]').forEach(b=>b.onclick=()=>{
+    if(!confirm('Delete invoice?'))return;
+    state.invoices=state.invoices.filter(x=>x.id!==b.dataset.delInvoice);
+    saveState();toast('Deleted','bad');render();
+  });
 
   // EDIT BUTTONS
   $$('[data-edit-ship]').forEach(b=>b.onclick=()=>{const i=state.shipments.findIndex(s=>s.id===b.dataset.editShip);if(i<0)return;state.modals._editShip=i;state.modals.shipment=true;saveState();render()});
-  $$('[data-edit-client]').forEach(b=>b.onclick=()=>{state.modals._editClient=+b.dataset.editClient;state.modals.client=true;saveState();render()});
-  $$('[data-edit-staff]').forEach(b=>b.onclick=()=>{state.modals._editStaff=+b.dataset.editStaff;state.modals.staff=true;saveState();render()});
-  $$('[data-edit-vehicle]').forEach(b=>b.onclick=()=>{state.modals._editVehicle=+b.dataset.editVehicle;state.modals.vehicle=true;saveState();render()});
+  $$('[data-edit-client]').forEach(b=>b.onclick=()=>{
+    const idx=state.clients.findIndex(x=>x.id===b.dataset.editClient);
+    if(idx<0)return;
+    state.modals._editClient=idx;state.modals.client=true;saveState();render();
+  });
+  $$('[data-edit-staff]').forEach(b=>b.onclick=()=>{
+    const idx=state.staff.findIndex(x=>x.id===b.dataset.editStaff);
+    if(idx<0)return;
+    state.modals._editStaff=idx;state.modals.staff=true;saveState();render();
+  });
+  $$('[data-edit-vehicle]').forEach(b=>b.onclick=()=>{
+    const idx=state.vehicles.findIndex(x=>x.id===b.dataset.editVehicle);
+    if(idx<0)return;
+    state.modals._editVehicle=idx;state.modals.vehicle=true;saveState();render();
+  });
 
   // OPEN MODAL / SELECT SHIP
   $$('[data-open]').forEach(b=>b.onclick=()=>{state.modals[b.dataset.open]=true;saveState();render()});
