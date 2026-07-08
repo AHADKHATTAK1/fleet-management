@@ -3512,10 +3512,51 @@ render();
         if(notif) notif.style.display = 'none';
       }
     };
+
+    // ── SMART AUTO-OPEN SYSTEM ──
+    // Step 1: Show greeting bubble after 3s
     setTimeout(function(){
       var g = document.getElementById('wa-greet');
       if(g) g.style.display = 'flex';
-    }, 4000);
+    }, 3000);
+
+    // Step 2: Auto-open popup after 7s (only once per session)
+    var autoKey = 'wa_auto_opened';
+    if(!sessionStorage.getItem(autoKey)){
+      setTimeout(function(){
+        if(!opened){
+          sessionStorage.setItem(autoKey, '1');
+          waToggle();
+        }
+      }, 7000);
+    }
+
+    // Step 3: Auto-close after 30s of inactivity if user hasn't interacted
+    var autoCloseTimer = null;
+    function resetAutoClose(){
+      if(autoCloseTimer) clearTimeout(autoCloseTimer);
+      autoCloseTimer = setTimeout(function(){
+        if(opened) waToggle();
+      }, 30000);
+    }
+    var popup = document.getElementById('wa-popup');
+    if(popup){
+      popup.addEventListener('mouseenter', function(){ if(autoCloseTimer) clearTimeout(autoCloseTimer); });
+      popup.addEventListener('mouseleave', function(){ if(opened) resetAutoClose(); });
+    }
+
+    // Step 4: Re-pulse greeting bubble every 45s as gentle reminder
+    setInterval(function(){
+      if(!opened){
+        var greet = document.getElementById('wa-greet');
+        var label = greet ? greet.querySelector('.wa-greet-label') : null;
+        if(label && label.style.display !== 'none'){
+          label.style.transform = 'scale(1.08)';
+          label.style.transition = 'transform 0.2s';
+          setTimeout(function(){ label.style.transform = 'scale(1)'; }, 300);
+        }
+      }
+    }, 45000);
   })();
 </script>
 </body>

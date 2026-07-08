@@ -923,11 +923,46 @@ calcEstimate();
     if(e.key === 'Enter') waOpenChat();
   };
 
-  // Auto-show greeting after 4s
+  // ── SMART AUTO-OPEN SYSTEM ──
+  // Step 1: Show greeting bubble after 3s
   setTimeout(function(){
     var row = document.getElementById('wa-greet-row');
-    if(row){ row.style.display='flex'; }
-  }, 4000);
+    if(row) row.style.display = 'flex';
+  }, 3000);
+
+  // Step 2: Auto-open popup after 7s (only once per session)
+  var autoKey = 'wa_auto_opened';
+  if(!sessionStorage.getItem(autoKey)){
+    setTimeout(function(){
+      if(!opened){
+        sessionStorage.setItem(autoKey, '1');
+        waToggle();
+      }
+    }, 7000);
+  }
+
+  // Step 3: Auto-close after 30s of inactivity if user hasn't interacted
+  var autoCloseTimer = null;
+  function resetAutoClose(){
+    if(autoCloseTimer) clearTimeout(autoCloseTimer);
+    autoCloseTimer = setTimeout(function(){
+      if(opened) waToggle();
+    }, 30000);
+  }
+  document.getElementById('wa-popup').addEventListener('mouseenter', function(){ if(autoCloseTimer) clearTimeout(autoCloseTimer); });
+  document.getElementById('wa-popup').addEventListener('mouseleave', function(){ if(opened) resetAutoClose(); });
+
+  // Step 4: Re-show greeting bubble every 45s if popup is closed (gentle reminder)
+  setInterval(function(){
+    if(!opened){
+      var row = document.getElementById('wa-greet-row');
+      var gb = row ? row.querySelector('.wa-greet-bubble') : null;
+      if(gb){
+        gb.style.display = 'none';
+        setTimeout(function(){ gb.style.display = 'block'; gb.style.animation = 'none'; void gb.offsetWidth; gb.style.animation = ''; }, 200);
+      }
+    }
+  }, 45000);
 })();
 </script>
 </body>
