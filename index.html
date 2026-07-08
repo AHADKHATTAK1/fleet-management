@@ -605,314 +605,330 @@ function trackCargo() {
 // Initialize tools
 calcEstimate();
 </script>
-<!-- ═══════════════════════════════════════════
-     PROFESSIONAL WHATSAPP CHAT WIDGET
-══════════════════════════════════════════════ -->
+<!-- ═══════════════════════════ ULTRA PRO WHATSAPP WIDGET ═══════════════════════════ -->
 <style>
-  /* ── Widget Container ── */
   #wa-widget {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
+    position: fixed; bottom: 24px; right: 24px;
     z-index: 99999;
-    font-family: 'Inter', 'Segoe UI', sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 12px;
+    font-family: 'Inter','Segoe UI',sans-serif;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 14px;
   }
-
   /* ── Popup Card ── */
   #wa-popup {
-    width: 320px;
-    background: #fff;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.08);
+    width: 340px; background: #fff;
+    border-radius: 22px;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.22), 0 6px 20px rgba(0,0,0,0.1);
     overflow: hidden;
-    transform: scale(0.85) translateY(20px);
+    transform: scale(0.82) translateY(24px);
     transform-origin: bottom right;
-    opacity: 0;
-    pointer-events: none;
-    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s ease;
+    opacity: 0; pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.28s ease;
   }
-  #wa-popup.open {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-    pointer-events: all;
-  }
+  #wa-popup.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: all; }
 
-  /* ── Popup Header ── */
+  /* ── Header ── */
   .wa-header {
-    background: linear-gradient(135deg, #075E54 0%, #128C7E 60%, #25D366 100%);
-    padding: 18px 20px 22px;
-    position: relative;
+    background: linear-gradient(135deg, #054640 0%, #075E54 40%, #128C7E 75%, #25D366 100%);
+    padding: 16px 18px 20px; position: relative;
   }
-  .wa-header-close {
-    position: absolute;
-    top: 14px; right: 16px;
-    background: rgba(255,255,255,0.15);
-    border: none;
-    color: #fff;
-    width: 26px; height: 26px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 14px;
-    display: flex; align-items: center; justify-content: center;
+  .wa-header-actions { position: absolute; top: 12px; right: 14px; display: flex; gap: 6px; }
+  .wa-hbtn {
+    background: rgba(255,255,255,0.14); border: none; color: #fff;
+    width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+    font-size: 13px; display: flex; align-items: center; justify-content: center;
     transition: background 0.2s;
   }
-  .wa-header-close:hover { background: rgba(255,255,255,0.3); }
-  .wa-agent {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 4px;
-  }
+  .wa-hbtn:hover { background: rgba(255,255,255,0.28); }
+  .wa-agent { display: flex; align-items: center; gap: 13px; margin-top: 2px; }
   .wa-avatar {
-    width: 50px; height: 50px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #25D366, #128C7E);
-    border: 2.5px solid rgba(255,255,255,0.6);
+    width: 52px; height: 52px; border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    border: 2.5px solid rgba(255,255,255,0.55);
     display: flex; align-items: center; justify-content: center;
-    font-size: 22px;
-    flex-shrink: 0;
-    position: relative;
+    font-size: 24px; flex-shrink: 0; position: relative;
   }
   .wa-avatar-dot {
-    position: absolute;
-    bottom: 1px; right: 1px;
-    width: 13px; height: 13px;
-    background: #4ade80;
-    border-radius: 50%;
-    border: 2px solid #075E54;
+    position: absolute; bottom: 0px; right: 0px;
+    width: 14px; height: 14px; background: #4ade80;
+    border-radius: 50%; border: 2.5px solid #054640;
   }
-  .wa-agent-info h4 {
-    margin: 0 0 2px;
-    color: #fff;
-    font-size: 0.95rem;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-  }
-  .wa-agent-info p {
-    margin: 0;
-    color: rgba(255,255,255,0.75);
-    font-size: 0.75rem;
-  }
+  .wa-agent-info h4 { margin: 0 0 2px; color: #fff; font-size: 1rem; font-weight: 700; }
+  .wa-agent-info .wa-sub { color: rgba(255,255,255,0.7); font-size: 0.75rem; margin: 0 0 4px; }
+  .wa-status-row { display: flex; align-items: center; gap: 10px; }
   .wa-status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: rgba(255,255,255,0.15);
-    border-radius: 99px;
-    padding: 2px 8px;
-    margin-top: 4px;
-    font-size: 0.7rem;
-    color: rgba(255,255,255,0.9);
-    font-weight: 600;
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(255,255,255,0.14); border-radius: 99px;
+    padding: 3px 10px; font-size: 0.7rem; color: rgba(255,255,255,0.92); font-weight: 600;
   }
-  .wa-status-badge span.dot {
-    width: 6px; height: 6px;
-    background: #4ade80;
-    border-radius: 50%;
-    animation: wa-blink 1.8s infinite;
+  .wa-status-badge .dot { width: 7px; height: 7px; background: #4ade80; border-radius: 50%; animation: wa-blink 1.8s infinite; }
+  .wa-call-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 99px; padding: 3px 10px;
+    font-size: 0.7rem; color: #fff; font-weight: 600;
+    text-decoration: none; transition: background 0.2s;
   }
-  @keyframes wa-blink {
-    0%,100% { opacity: 1; }
-    50%      { opacity: 0.3; }
-  }
+  .wa-call-btn:hover { background: rgba(255,255,255,0.26); }
+  @keyframes wa-blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
 
-  /* ── Chat Bubble Preview ── */
+  /* ── Chat Body ── */
   .wa-body {
-    padding: 16px 18px 6px;
-    background: #f0f0f0;
-    background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d9d9d9' fill-opacity='0.35'%3E%3Cpath d='M0 38.59l2.83-2.83 1.41 1.41L1.41 40H0v-1.41zM0 20l2.83-2.83 1.41 1.41-2.83 2.83L0 20zm0-18.59L2.83-.83 4.24.58 1.41 3.41 0 2V.59zM20 38.59l2.83-2.83 1.41 1.41-2.83 2.83-1.41-1.41zM20 20l2.83-2.83 1.41 1.41-2.83 2.83-1.41-1.41zm0-18.59L22.83.59l1.41 1.41-2.83 2.83-1.41-1.42z'/%3E%3C/g%3E%3C/svg%3E");
+    padding: 14px 16px 10px; min-height: 120px;
+    background: #ece5dd;
+    background-image: url("data:image/svg+xml,%3Csvg width='52' height='52' viewBox='0 0 52 52' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23c8beb4' fill-opacity='0.3'%3E%3Cpath d='M1 1h2v2H1zm4 0h2v2H5zm4 0h2v2H9zM1 5h2v2H1zm4 0h2v2H5zm4 0h2v2H9zM1 9h2v2H1zm4 0h2v2H5zm4 0h2v2H9z'/%3E%3C/g%3E%3C/svg%3E");
   }
   .wa-bubble {
-    background: #fff;
-    border-radius: 12px 12px 12px 3px;
-    padding: 10px 14px;
-    font-size: 0.83rem;
-    color: #333;
-    line-height: 1.5;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    position: relative;
-    max-width: 88%;
-    animation: wa-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+    background: #fff; border-radius: 12px 12px 12px 3px;
+    padding: 10px 13px; font-size: 0.84rem; color: #2c2c2c;
+    line-height: 1.55; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    max-width: 90%; margin-bottom: 6px;
+    animation: wa-pop 0.45s cubic-bezier(0.34,1.56,0.64,1) both;
   }
-  .wa-bubble-time {
-    font-size: 0.65rem;
-    color: #aaa;
-    text-align: right;
-    margin-top: 3px;
+  .wa-bubble-time { font-size: 0.63rem; color: #9a9a9a; text-align: right; margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 3px; }
+  .wa-bubble-time svg { width: 14px; height: 14px; fill: #53bdeb; }
+  @keyframes wa-pop { from{transform:scale(0.78) translateY(6px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
+
+  /* ── Typing indicator ── */
+  .wa-typing {
+    display: flex; align-items: center; gap: 4px;
+    background: #fff; border-radius: 12px 12px 12px 3px;
+    padding: 10px 14px; width: fit-content;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    animation: wa-pop 0.3s ease both;
   }
-  @keyframes wa-pop {
-    from { transform: scale(0.8); opacity: 0; }
-    to   { transform: scale(1);   opacity: 1; }
+  .wa-typing span {
+    width: 7px; height: 7px; background: #aaa; border-radius: 50%;
+    animation: wa-typing-dot 1.2s infinite ease-in-out;
+  }
+  .wa-typing span:nth-child(2) { animation-delay: 0.2s; }
+  .wa-typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes wa-typing-dot {
+    0%,60%,100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-5px); opacity: 1; }
   }
 
-  /* ── Footer CTA ── */
-  .wa-footer {
-    padding: 14px 18px 18px;
-    background: #fff;
+  /* ── Quick Replies ── */
+  .wa-quick-replies {
+    padding: 8px 14px 12px; display: flex; flex-wrap: wrap; gap: 7px;
+    background: #ece5dd;
   }
-  .wa-cta {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-    padding: 13px 0;
+  .wa-qr {
+    background: #fff; border: 1.5px solid #25D366;
+    color: #075E54; border-radius: 20px;
+    padding: 5px 13px; font-size: 0.75rem; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    transition: background 0.18s, color 0.18s, transform 0.15s;
+    white-space: nowrap;
+  }
+  .wa-qr:hover { background: #25D366; color: #fff; transform: translateY(-1px); }
+
+  /* ── Footer ── */
+  .wa-footer { padding: 14px 16px 16px; background: #f0f0f0; border-top: 1px solid #e0e0e0; }
+  .wa-input-row {
+    display: flex; align-items: center; gap: 8px;
+    background: #fff; border-radius: 26px;
+    padding: 9px 14px; margin-bottom: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .wa-input-row input {
+    flex: 1; border: none; outline: none;
+    font-size: 0.83rem; color: #333; background: transparent;
+    font-family: inherit;
+  }
+  .wa-input-row input::placeholder { color: #aaa; }
+  .wa-send-btn {
+    width: 34px; height: 34px; border-radius: 50%;
     background: linear-gradient(135deg, #25D366, #128C7E);
-    border: none;
-    border-radius: 12px;
-    color: #fff;
-    font-size: 0.9rem;
-    font-weight: 700;
-    cursor: pointer;
-    text-decoration: none;
-    box-shadow: 0 4px 18px rgba(37,211,102,0.4);
+    border: none; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
     transition: transform 0.18s, box-shadow 0.18s;
-    letter-spacing: 0.01em;
+    box-shadow: 0 2px 10px rgba(37,211,102,0.4);
   }
-  .wa-cta:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(37,211,102,0.55);
+  .wa-send-btn:hover { transform: scale(1.1); }
+  .wa-send-btn svg { width: 16px; height: 16px; fill: #fff; }
+  .wa-cta {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 13px 0;
+    background: linear-gradient(135deg, #25D366, #128C7E);
+    border: none; border-radius: 14px; color: #fff;
+    font-size: 0.9rem; font-weight: 700; cursor: pointer; text-decoration: none;
+    box-shadow: 0 4px 20px rgba(37,211,102,0.42);
+    transition: transform 0.18s, box-shadow 0.18s; letter-spacing: 0.01em;
   }
+  .wa-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(37,211,102,0.58); }
   .wa-cta svg { width: 20px; height: 20px; fill: #fff; flex-shrink: 0; }
-  .wa-privacy {
-    text-align: center;
-    font-size: 0.68rem;
-    color: #aaa;
-    margin-top: 8px;
-  }
+  .wa-privacy { text-align: center; font-size: 0.66rem; color: #bbb; margin-top: 8px; }
   .wa-privacy a { color: #25D366; text-decoration: none; }
 
-  /* ── FAB Button ── */
+  /* ── FAB ── */
   #wa-fab {
-    width: 60px; height: 60px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    width: 62px; height: 62px; border-radius: 50%;
+    background: linear-gradient(135deg, #25D366, #128C7E);
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    border: none;
-    box-shadow: 0 6px 28px rgba(37,211,102,0.5);
-    animation: wa-pulse 2.4s infinite;
-    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer; border: none;
+    box-shadow: 0 6px 30px rgba(37,211,102,0.55);
+    animation: wa-pulse 2.5s infinite;
+    transition: transform 0.22s, box-shadow 0.22s;
     position: relative;
   }
-  #wa-fab:hover {
-    transform: scale(1.08);
-    box-shadow: 0 10px 36px rgba(37,211,102,0.65);
-  }
-  #wa-fab svg { width: 28px; height: 28px; fill: #fff; transition: transform 0.3s; }
-  #wa-fab.active svg { transform: rotate(45deg) scale(0.85); }
+  #wa-fab:hover { transform: scale(1.1); box-shadow: 0 12px 40px rgba(37,211,102,0.7); }
+  #wa-fab .wa-fab-icon { transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+  #wa-fab .wa-fab-icon svg { width: 30px; height: 30px; fill: #fff; display: block; }
+  #wa-fab.active .wa-fab-icon { transform: rotate(90deg) scale(0.85); }
   #wa-fab .wa-notif {
-    position: absolute;
-    top: -2px; right: -2px;
-    background: #ff4757;
-    color: #fff;
-    font-size: 0.6rem;
-    font-weight: 800;
-    width: 18px; height: 18px;
-    border-radius: 50%;
+    position: absolute; top: -3px; right: -3px;
+    background: #ff4757; color: #fff; font-size: 0.58rem; font-weight: 800;
+    min-width: 18px; height: 18px; border-radius: 99px; padding: 0 4px;
     display: flex; align-items: center; justify-content: center;
-    border: 2px solid #fff;
-    animation: wa-bounce 1s ease infinite alternate;
+    border: 2.5px solid #fff;
+    animation: wa-notif-pop 1.1s ease infinite alternate;
   }
-  @keyframes wa-bounce { from { transform: scale(1); } to { transform: scale(1.2); } }
+  @keyframes wa-notif-pop { from{transform:scale(1)} to{transform:scale(1.25)} }
   @keyframes wa-pulse {
-    0%   { box-shadow: 0 0 0 0   rgba(37,211,102,0.55); }
-    70%  { box-shadow: 0 0 0 16px rgba(37,211,102,0); }
+    0%   { box-shadow: 0 0 0 0   rgba(37,211,102,0.6); }
+    70%  { box-shadow: 0 0 0 18px rgba(37,211,102,0); }
     100% { box-shadow: 0 0 0 0   rgba(37,211,102,0); }
   }
-
-  /* ── Greeting Label ── */
-  .wa-greet-label {
-    background: #fff;
-    color: #222;
-    font-size: 0.78rem;
-    font-weight: 600;
-    padding: 6px 14px;
-    border-radius: 20px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-    white-space: nowrap;
+  /* ── Greeting bubble ── */
+  .wa-greet-bubble {
+    background: #fff; color: #222; font-size: 0.8rem; font-weight: 600;
+    padding: 10px 16px; border-radius: 18px 18px 4px 18px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.14);
+    white-space: nowrap; cursor: pointer;
     animation: wa-fadein 0.5s ease both;
+    border: 1.5px solid rgba(37,211,102,0.2);
+    position: relative;
   }
-  @keyframes wa-fadein { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+  .wa-greet-bubble::after {
+    content:''; position:absolute; bottom:-8px; right:14px;
+    border: 8px solid transparent; border-top-color: #fff;
+    border-bottom: 0; margin-left: -8px;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.08));
+  }
+  @keyframes wa-fadein { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 </style>
 
 <div id="wa-widget">
-  <!-- Popup Card -->
-  <div id="wa-popup">
+  <!-- ── Popup ── -->
+  <div id="wa-popup" role="dialog" aria-label="WhatsApp Chat">
     <!-- Header -->
     <div class="wa-header">
-      <button class="wa-header-close" onclick="waToggle()" aria-label="Close">✕</button>
+      <div class="wa-header-actions">
+        <a class="wa-hbtn" href="tel:+923042571971" title="Call us" aria-label="Call">📞</a>
+        <button class="wa-hbtn" onclick="waToggle()" aria-label="Close">✕</button>
+      </div>
       <div class="wa-agent">
-        <div class="wa-avatar">
-          🚚
-          <div class="wa-avatar-dot"></div>
-        </div>
+        <div class="wa-avatar">🚚<div class="wa-avatar-dot"></div></div>
         <div class="wa-agent-info">
-          <h4>Haji Barkat Khan Transport</h4>
-          <p>Freight & Cargo Services</p>
-          <div class="wa-status-badge"><span class="dot"></span> Online — typically replies instantly</div>
+          <h4>HBK Transport</h4>
+          <p class="wa-sub">Haji Barkat Khan — Freight &amp; Cargo</p>
+          <div class="wa-status-row">
+            <div class="wa-status-badge"><span class="dot"></span>Online now</div>
+            <a class="wa-call-btn" href="tel:+923042571971">📞 Call</a>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Chat Preview -->
-    <div class="wa-body">
-      <div class="wa-bubble">
-        👋 Assalam-o-Alaikum! <strong>HBK Transport</strong> mein khush aamdeed.<br><br>
-        Freight quotes, shipment tracking, ya kisi bhi transport service ke liye hum se rabta karein — hum haazir hain!
-        <div class="wa-bubble-time">Today ✔✔</div>
+    <!-- Chat Body -->
+    <div class="wa-body" id="wa-chat-body">
+      <div class="wa-typing" id="wa-typing-ind">
+        <span></span><span></span><span></span>
       </div>
     </div>
 
-    <!-- CTA -->
+    <!-- Quick Replies -->
+    <div class="wa-quick-replies">
+      <a class="wa-qr" href="https://wa.me/923042571971?text=Freight%20quote%20chahiye" target="_blank">💰 Freight Quote</a>
+      <a class="wa-qr" href="https://wa.me/923042571971?text=Shipment%20track%20karna%20hai" target="_blank">📦 Track Shipment</a>
+      <a class="wa-qr" href="https://wa.me/923042571971?text=Container%20availability%20batao" target="_blank">🚢 Container Info</a>
+      <a class="wa-qr" href="https://wa.me/923042571971?text=Mujhe%20transport%20services%20ki%20zaroorat%20hai" target="_blank">🚚 Book Transport</a>
+    </div>
+
+    <!-- Footer -->
     <div class="wa-footer">
-      <a class="wa-cta"
-         href="https://wa.me/923000000000?text=Hello%20HBK%20Transport%2C%20I%20need%20freight%20%2F%20transport%20services.%20Please%20guide%20me."
+      <div class="wa-input-row">
+        <input type="text" id="wa-msg-input" placeholder="Type a message..." onkeydown="waHandleKey(event)" autocomplete="off"/>
+        <button class="wa-send-btn" onclick="waOpenChat()" aria-label="Send">
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+      <a class="wa-cta" id="wa-main-cta"
+         href="https://wa.me/923042571971?text=Hello%20HBK%20Transport%2C%20I%20need%20freight%20services.%20Please%20guide%20me."
          target="_blank" rel="noopener">
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M16 0C7.163 0 0 7.163 0 16c0 2.82.737 5.47 2.027 7.773L0 32l8.489-2.001A15.93 15.93 0 0 0 16 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm0 29.333a13.27 13.27 0 0 1-6.743-1.833l-.484-.287-5.041 1.188 1.237-4.892-.316-.503A13.267 13.267 0 0 1 2.667 16C2.667 8.636 8.636 2.667 16 2.667S29.333 8.636 29.333 16 23.364 29.333 16 29.333zm7.31-9.833c-.4-.2-2.365-1.167-2.732-1.3-.366-.133-.632-.2-.898.2-.267.4-1.032 1.3-1.265 1.567-.233.267-.466.3-.866.1-.4-.2-1.687-.622-3.213-1.982-1.187-1.059-1.99-2.367-2.223-2.767-.234-.4-.025-.616.175-.816.18-.18.4-.467.6-.7.2-.233.267-.4.4-.666.133-.267.067-.5-.033-.7-.1-.2-.898-2.167-1.232-2.967-.324-.78-.654-.674-.898-.686-.233-.011-.5-.013-.766-.013s-.7.1-1.066.5c-.367.4-1.4 1.367-1.4 3.333s1.433 3.867 1.633 4.133c.2.267 2.82 4.307 6.832 6.033.955.412 1.7.659 2.282.844.958.306 1.831.263 2.52.16.769-.115 2.365-.967 2.699-1.9.333-.933.333-1.733.233-1.9-.1-.167-.367-.267-.767-.467z"/></svg>
+        <svg viewBox="0 0 32 32"><path d="M16 0C7.163 0 0 7.163 0 16c0 2.82.737 5.47 2.027 7.773L0 32l8.489-2.001A15.93 15.93 0 0 0 16 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm0 29.333a13.27 13.27 0 0 1-6.743-1.833l-.484-.287-5.041 1.188 1.237-4.892-.316-.503A13.267 13.267 0 0 1 2.667 16C2.667 8.636 8.636 2.667 16 2.667S29.333 8.636 29.333 16 23.364 29.333 16 29.333zm7.31-9.833c-.4-.2-2.365-1.167-2.732-1.3-.366-.133-.632-.2-.898.2-.267.4-1.032 1.3-1.265 1.567-.233.267-.466.3-.866.1-.4-.2-1.687-.622-3.213-1.982-1.187-1.059-1.99-2.367-2.223-2.767-.234-.4-.025-.616.175-.816.18-.18.4-.467.6-.7.2-.233.267-.4.4-.666.133-.267.067-.5-.033-.7-.1-.2-.898-2.167-1.232-2.967-.324-.78-.654-.674-.898-.686-.233-.011-.5-.013-.766-.013s-.7.1-1.066.5c-.367.4-1.4 1.367-1.4 3.333s1.433 3.867 1.633 4.133c.2.267 2.82 4.307 6.832 6.033.955.412 1.7.659 2.282.844.958.306 1.831.263 2.52.16.769-.115 2.365-.967 2.699-1.9.333-.933.333-1.733.233-1.9-.1-.167-.367-.267-.767-.467z"/></svg>
         Start Chat on WhatsApp
       </a>
-      <p class="wa-privacy">🔒 Your conversation is end-to-end encrypted by <a href="https://whatsapp.com" target="_blank">WhatsApp</a></p>
+      <p class="wa-privacy">🔒 End-to-end encrypted · <a href="https://whatsapp.com" target="_blank">WhatsApp</a></p>
     </div>
   </div>
 
-  <!-- Greeting Label (shown before first open) -->
-  <div id="wa-greet" style="display:flex;align-items:center;gap:10px">
-    <span class="wa-greet-label">💬 Need help? Chat with us!</span>
-    <!-- FAB -->
+  <!-- ── FAB + Greeting ── -->
+  <div id="wa-greet-row" style="display:none;align-items:flex-end;gap:12px;flex-direction:column">
+    <div class="wa-greet-bubble" onclick="waToggle()">
+      👋 Salaam! Transport service chahiye?
+    </div>
     <button id="wa-fab" onclick="waToggle()" aria-label="Open WhatsApp Chat">
       <div class="wa-notif">1</div>
-      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M16 0C7.163 0 0 7.163 0 16c0 2.82.737 5.47 2.027 7.773L0 32l8.489-2.001A15.93 15.93 0 0 0 16 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm0 29.333a13.27 13.27 0 0 1-6.743-1.833l-.484-.287-5.041 1.188 1.237-4.892-.316-.503A13.267 13.267 0 0 1 2.667 16C2.667 8.636 8.636 2.667 16 2.667S29.333 8.636 29.333 16 23.364 29.333 16 29.333zm7.31-9.833c-.4-.2-2.365-1.167-2.732-1.3-.366-.133-.632-.2-.898.2-.267.4-1.032 1.3-1.265 1.567-.233.267-.466.3-.866.1-.4-.2-1.687-.622-3.213-1.982-1.187-1.059-1.99-2.367-2.223-2.767-.234-.4-.025-.616.175-.816.18-.18.4-.467.6-.7.2-.233.267-.4.4-.666.133-.267.067-.5-.033-.7-.1-.2-.898-2.167-1.232-2.967-.324-.78-.654-.674-.898-.686-.233-.011-.5-.013-.766-.013s-.7.1-1.066.5c-.367.4-1.4 1.367-1.4 3.333s1.433 3.867 1.633 4.133c.2.267 2.82 4.307 6.832 6.033.955.412 1.7.659 2.282.844.958.306 1.831.263 2.52.16.769-.115 2.365-.967 2.699-1.9.333-.933.333-1.733.233-1.9-.1-.167-.367-.267-.767-.467z"/></svg>
+      <div class="wa-fab-icon">
+        <svg viewBox="0 0 32 32"><path d="M16 0C7.163 0 0 7.163 0 16c0 2.82.737 5.47 2.027 7.773L0 32l8.489-2.001A15.93 15.93 0 0 0 16 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm0 29.333a13.27 13.27 0 0 1-6.743-1.833l-.484-.287-5.041 1.188 1.237-4.892-.316-.503A13.267 13.267 0 0 1 2.667 16C2.667 8.636 8.636 2.667 16 2.667S29.333 8.636 29.333 16 23.364 29.333 16 29.333zm7.31-9.833c-.4-.2-2.365-1.167-2.732-1.3-.366-.133-.632-.2-.898.2-.267.4-1.032 1.3-1.265 1.567-.233.267-.466.3-.866.1-.4-.2-1.687-.622-3.213-1.982-1.187-1.059-1.99-2.367-2.223-2.767-.234-.4-.025-.616.175-.816.18-.18.4-.467.6-.7.2-.233.267-.4.4-.666.133-.267.067-.5-.033-.7-.1-.2-.898-2.167-1.232-2.967-.324-.78-.654-.674-.898-.686-.233-.011-.5-.013-.766-.013s-.7.1-1.066.5c-.367.4-1.4 1.367-1.4 3.333s1.433 3.867 1.633 4.133c.2.267 2.82 4.307 6.832 6.033.955.412 1.7.659 2.282.844.958.306 1.831.263 2.52.16.769-.115 2.365-.967 2.699-1.9.333-.933.333-1.733.233-1.9-.1-.167-.367-.267-.767-.467z"/></svg>
+      </div>
     </button>
   </div>
 </div>
 
 <script>
-  (function(){
-    var opened = false;
-    window.waToggle = function() {
-      opened = !opened;
-      document.getElementById('wa-popup').classList.toggle('open', opened);
-      document.getElementById('wa-fab').classList.toggle('active', opened);
-      // Hide greeting label after first open
-      var greet = document.getElementById('wa-greet');
-      if(opened) {
-        var label = greet.querySelector('.wa-greet-label');
-        if(label) label.style.display = 'none';
-        var notif = document.querySelector('#wa-fab .wa-notif');
-        if(notif) notif.style.display = 'none';
-      }
-    };
-    // Auto open greeting after 4s
+(function(){
+  var WA_NUMBER = '923042571971';
+  var opened = false;
+  var greeted = false;
+
+  function showBubble(){
+    var b = document.getElementById('wa-chat-body');
+    var t = document.getElementById('wa-typing-ind');
+    if(!b || !t) return;
+    // Show bubble after typing animation
     setTimeout(function(){
-      var g = document.getElementById('wa-greet');
-      if(g) g.style.display = 'flex';
-    }, 4000);
-  })();
+      t.style.display = 'none';
+      var msg = document.createElement('div');
+      msg.className = 'wa-bubble';
+      msg.innerHTML = '👋 <strong>Assalam-o-Alaikum!</strong> HBK Transport mein khush aamdeed.<br><br>Freight quotes, container booking, ya shipment tracking — sab kuch ek click mein!<div class="wa-bubble-time">Now <svg viewBox="0 0 16 15"><path d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.88a.32.32 0 0 1-.484.032l-.358-.325a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l1.32 1.266c.143.14.361.125.484-.033l6.272-8.048a.366.366 0 0 0-.064-.512zm-4.1 0l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.879a.32.32 0 0 1-.484.033L1.891 7.769a.366.366 0 0 0-.515.006l-.423.433a.364.364 0 0 0 .006.514l3.258 3.185c.143.14.361.125.484-.033l6.272-8.048a.365.365 0 0 0-.063-.51z"/></svg></div>';
+      b.appendChild(msg);
+    }, 1800);
+  }
+
+  window.waToggle = function(){
+    opened = !opened;
+    document.getElementById('wa-popup').classList.toggle('open', opened);
+    document.getElementById('wa-fab').classList.toggle('active', opened);
+    if(opened && !greeted){
+      greeted = true;
+      showBubble();
+      // hide greeting bubble
+      var row = document.getElementById('wa-greet-row');
+      if(row){ var gb = row.querySelector('.wa-greet-bubble'); if(gb) gb.style.display='none'; }
+      var notif = document.querySelector('#wa-fab .wa-notif');
+      if(notif) notif.style.display='none';
+    }
+  };
+
+  window.waOpenChat = function(){
+    var inp = document.getElementById('wa-msg-input');
+    var msg = inp ? inp.value.trim() : '';
+    var text = msg || 'Hello HBK Transport, I need transport services. Please guide me.';
+    window.open('https://wa.me/'+WA_NUMBER+'?text='+encodeURIComponent(text), '_blank');
+  };
+
+  window.waHandleKey = function(e){
+    if(e.key === 'Enter') waOpenChat();
+  };
+
+  // Auto-show greeting after 4s
+  setTimeout(function(){
+    var row = document.getElementById('wa-greet-row');
+    if(row){ row.style.display='flex'; }
+  }, 4000);
+})();
 </script>
 </body>
 </html>
