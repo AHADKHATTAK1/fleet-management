@@ -323,7 +323,9 @@ footer {
   .stats-strip { grid-template-columns: repeat(2, 1fr); gap: 24px; }
   .tools-grid { grid-template-columns: 1fr; }
   .hero-section { padding: 50px 0; }
-  .nav-links a { display: none; }
+  .nav-links a:not(.btn-portal) { display: none; }
+  .nav-links { gap: 12px; }
+  .btn-portal { padding: 0.45rem 0.85rem; font-size: 0.78rem; border-radius: 10px; }
 }
 </style>
 </head>

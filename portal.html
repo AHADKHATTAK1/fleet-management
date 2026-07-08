@@ -643,10 +643,11 @@ a{color:var(--accent);text-decoration:none}
   .card-kpi { min-height: 90px; padding: 0.85rem; border-radius: 14px; }
   .kpi-value { font-size: 1.55rem; }
   .panel { padding: 12px; border-radius: 16px; }
-  .page-title { font-size: 1.6rem; }
-  .topbar { margin-bottom: 12px; gap: 8px; }
-  .topbar-right { width: 100%; justify-content: space-between; gap: 6px; }
-  .search-box { flex: 1; min-width: 0; }
+  .page-title { font-size: 1.3rem; }
+  .page-label { display: none; }
+  .topbar { display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 10px; width: 100%; flex-wrap: nowrap; }
+  .topbar-right { width: auto; flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 8px; flex-wrap: nowrap; }
+  .search-box { max-width: 170px; flex: initial; }
   .user-pill { display: none; }
   .table { display: block; overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; }
 }
