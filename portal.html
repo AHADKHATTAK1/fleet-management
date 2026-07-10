@@ -2704,6 +2704,17 @@ function buildModalHTML(){
   const editStaff=m._editStaff!=null?(state.staff||[])[m._editStaff]||{}:{};
   const editVeh=m._editVehicle!=null?(state.vehicles||[])[m._editVehicle]||{}:{};
 
+  const getNextBiltyId = () => {
+    if (!state.bilties || !state.bilties.length) return 6429;
+    const maxId = Math.max(...state.bilties.map(b => parseInt(String(b.id).replace(/\D/g, '')) || 0));
+    return maxId >= 6429 ? maxId + 1 : 6429;
+  };
+  const getNextChallanId = () => {
+    if (!state.challans || !state.challans.length) return 320;
+    const maxId = Math.max(...state.challans.map(c => parseInt(String(c.id).replace(/\D/g, '')) || 0));
+    return maxId >= 320 ? maxId + 1 : 320;
+  };
+
   return `
   ${modal('modalShipment',m.shipment,`🚚 ${m._editShip!=null?'Edit':'New'} Shipment`,`
     <div class="field-row"><div class="field"><label>Client</label><input id="shipClient" value="${editShip.client||''}" placeholder="Client name"></div><div class="field"><label>Cargo type</label><input id="shipCargo" value="${editShip.cargo||''}" placeholder="e.g. Dry goods"></div></div>
@@ -2801,7 +2812,7 @@ function buildModalHTML(){
   ${modal('modalBilty', m.bilty, '📜 New Goods Receipt (Bilty / بلٹی)', `
     <datalist id="cltList">${(state.clients||[]).filter(Boolean).map(c=>`<option value="${c.name||''}">`).join('')}</datalist>
     <div class="field-row">
-      <div class="field"><label>Bilty No. (بلٹی نمبر)</label><input id="bilId" type="text" value="${(state.bilties||[]).length + 6429}" placeholder="e.g. 6429"></div>
+      <div class="field"><label>Bilty No. (بلٹی نمبر)</label><input id="bilId" type="text" value="${getNextBiltyId()}" placeholder="e.g. 6429"></div>
       <div class="field"><label>Date (تاریخ)</label><input id="bilDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
     </div>
     <div class="field-row">
@@ -2840,7 +2851,7 @@ function buildModalHTML(){
     <datalist id="truckList">${(state.vehicles||[]).map(v=>`<option value="${v.id}">${v.id} — ${v.make||''} ${v.model||''}</option>`).join('')}</datalist>
     <datalist id="driverList">${(state.staff||[]).filter(x=>x.role==='Driver'||x.role==='driver').map(d=>`<option value="${d.name}">`).join('')}</datalist>
     <div class="field-row">
-      <div class="field"><label>Challan No. (چالان نمبر)</label><input id="chaId" type="text" value="${(state.challans||[]).length + 320}" placeholder="e.g. 320"></div>
+      <div class="field"><label>Challan No. (چالان نمبر)</label><input id="chaId" type="text" value="${getNextChallanId()}" placeholder="e.g. 320"></div>
       <div class="field"><label>Date (تاریخ)</label><input id="chaDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
     </div>
     <div class="field-row">
@@ -2859,7 +2870,12 @@ function buildModalHTML(){
       <label style="font-weight:700;color:var(--accent);margin-bottom:8px;display:block">Load Bilties onto this Challan (بلٹیاں لوڈ کریں)</label>
       <div style="max-height:180px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;padding:8px;background:rgba(0,0,0,0.2)">
         ${(()=>{
-          const linked=new Set((state.challans||[]).filter(Boolean).flatMap(c=>(c.biltyIds||[]).map(String)));
+          const ch = state.challans || [];
+          const linkedIds = [];
+          for (let i = 0; i < ch.length; i++) {
+            if (ch[i] && ch[i].biltyIds) linkedIds.push(...ch[i].biltyIds.map(String));
+          }
+          const linked=new Set(linkedIds);
           const available=(state.bilties||[]).filter(b=>b && !linked.has(String(b.id)));
           if(!available.length) return '<div class="muted" style="padding:12px;font-size:.82rem;text-align:center">📭 No unassigned Bilties yet. Create a Bilty first.</div>';
           return available.map(b=>`
@@ -3383,10 +3399,31 @@ function printSalarySlip(sal){
   win.document.close();win.focus();setTimeout(()=>win.print(),500);
 }
 
+function printFallback(htmlStr) {
+  try {
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+    iframe.contentWindow.document.open();
+    iframe.contentWindow.document.write(htmlStr);
+    iframe.contentWindow.document.close();
+    iframe.contentWindow.focus();
+    setTimeout(() => {
+      iframe.contentWindow.print();
+      setTimeout(() => document.body.removeChild(iframe), 1000);
+    }, 500);
+  } catch(e) {
+    toast('Error printing document. Popups may be strictly blocked.', 'bad');
+  }
+}
+
 function printBilty(bilty){
-  const win=window.open('','_blank');
-  if(!win) { toast('⚠️ Please allow popups to print Bilty', 'warn'); return; }
-  win.document.write(`
+  const htmlStr = `
   <html>
   <head>
     <title>Bilty #${bilty.id}</title>
@@ -3515,13 +3552,11 @@ function printBilty(bilty){
 }
 
 function printChallan(challan){
-  const win=window.open('','_blank');
-  if(!win) { toast('⚠️ Please allow popups to print Challan', 'warn'); return; }
   const loadedBilties = (challan.biltyIds||[]).map(bid => state.bilties.find(b=>String(b.id)===String(bid))).filter(Boolean);
   const totalQty = loadedBilties.reduce((a,b)=>a+(+b.qty||0),0);
   const totalWeight = loadedBilties.reduce((a,b)=>a+(+b.weight||0),0);
   const totalFreight = loadedBilties.reduce((a,b)=>a+(+b.freight||0),0);
-  win.document.write(`
+  const htmlStr = `
   <html>
   <head>
     <title>Challan #${challan.id}</title>
@@ -3617,10 +3652,17 @@ function printChallan(challan){
     </div>
   </body>
   </html>
-  `);
-  win.document.close();
-  win.focus();
-  setTimeout(()=>win.print(),500);
+  `;
+  
+  const win=window.open('','_blank');
+  if(win) {
+    win.document.write(htmlStr);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 200);
+  } else {
+    printFallback(htmlStr);
+  }
 }
 
 function printReport(){
@@ -3648,8 +3690,17 @@ function printReport(){
   <table><thead><tr><th>ID</th><th>Date</th><th>Description</th><th>Category</th><th>Type</th><th>Amount</th></tr></thead>
   <tbody>${state.transactions.map(t=>`<tr><td style="font-size:.74rem">${t.id}</td><td>${t.date}</td><td>${t.desc}</td><td>${t.category}</td><td>${t.type}</td><td style="font-weight:700;color:${t.type==='income'?'green':'red'}">${t.type==='income'?'+':'-'}${money(t.amount)}</td></tr>`).join('')}</tbody></table>
   <div class="footer">${s.companyFull} | Generated by HBK Fleet Management System v5</div>
-  </body></html>`);
-  win.document.close();win.focus();setTimeout(()=>win.print(),600);
+  </body></html>`;
+  
+  const win=window.open('','_blank');
+  if(win) {
+    win.document.write(htmlStr);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 200);
+  } else {
+    printFallback(htmlStr);
+  }
 }
 
 function exportToJSON(){
