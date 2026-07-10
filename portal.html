@@ -3793,6 +3793,22 @@ function loadDemoData(){
   }
 }
 
+// ══════════════════════════════════════════════════════
+//  GLOBAL FALLBACK: data-open / data-close delegation
+// ══════════════════════════════════════════════════════
+document.addEventListener('click', function(e) {
+  const opener = e.target.closest('[data-open]');
+  if (opener && opener.dataset.open) {
+    state.modals[opener.dataset.open] = true;
+    saveState(); render(); return;
+  }
+  const closer = e.target.closest('[data-close]');
+  if (closer && closer.dataset.close) {
+    state.modals[closer.dataset.close] = false;
+    saveState(); render(); return;
+  }
+}, true);
+
 // PWA Service Worker Registration
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -3975,7 +3991,12 @@ function renderContent(){
     Reports:reportsView,['Activity Log']:activityLogView,Settings:settingsView,Guide:guideView
   };
   $('#content').innerHTML=(views[state.section]||dashboardView)();
-  $('#modals').innerHTML=buildModalHTML();
+  try {
+    $('#modals').innerHTML=buildModalHTML();
+  } catch(e) {
+    console.error('Modal build error:', e);
+    $('#modals').innerHTML='';
+  }
   wireModals();
   renderNotifications();
   animateKPIs();
