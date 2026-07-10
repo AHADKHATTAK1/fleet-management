@@ -753,7 +753,7 @@ window.onerror = function(msg, url, line) {
 
 // Automatic PWA Cache Storage Purge to force latest files
 (function(){
-  const CURRENT_VER = 'hbk-fleet-v17';
+  const CURRENT_VER = 'hbk-fleet-v18';
   if (localStorage.getItem('portal_pwa_ver') !== CURRENT_VER) {
     localStorage.setItem('portal_pwa_ver', CURRENT_VER);
     if ('caches' in window) {
@@ -3667,7 +3667,10 @@ function loadDemoData(){
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('PWA Service Worker registered:', reg.scope))
+      .then(reg => {
+        console.log('PWA Service Worker registered:', reg.scope);
+        reg.update(); // Force immediate update check
+      })
       .catch(err => console.error('PWA Service Worker registration failed:', err));
   });
   let refreshing = false;
