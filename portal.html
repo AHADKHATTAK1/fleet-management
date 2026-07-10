@@ -753,7 +753,7 @@ window.onerror = function(msg, url, line) {
 
 // Automatic PWA Cache Storage Purge to force latest files
 (function(){
-  const CURRENT_VER = 'hbk-fleet-v15';
+  const CURRENT_VER = 'hbk-fleet-v16';
   if (localStorage.getItem('portal_pwa_ver') !== CURRENT_VER) {
     localStorage.setItem('portal_pwa_ver', CURRENT_VER);
     if ('caches' in window) {
@@ -929,8 +929,9 @@ function badge(s){
   const [label,color,bg,dc]=STATUS_META[s]||STATUS_META.pending;
   return `<span class="badge" style="color:${color};background:${bg}"><span class="status-dot ${dc}"></span>${label}</span>`;
 }
-function kpi(value,label,color,icon,trend=''){
-  return `<div class="card-kpi" style="color:${color}">
+function kpi(value,label,color,icon,trend='',targetSection=''){
+  const clickAttr=targetSection?`onclick="state.section='${targetSection}';state.search='';render()" style="cursor:pointer;transition:all 0.15s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'"`:'';
+  return `<div class="card-kpi" ${clickAttr} style="color:${color}">
     <div class="kpi-icon" style="color:${color};background:${color}1f">${icon}</div>
     <div>
       <div class="kpi-value">${value}</div>
@@ -1485,14 +1486,14 @@ function dashboardView(){
   </div>
 
   <div class="grid3">
-    ${kpi(`<span class="kpi-animate" data-target="${activeShips}">${activeShips}</span>`,'Active shipments','#ff8a3d','🚚','In motion')}
-    ${kpi(`<span class="kpi-animate" data-target="${Math.round(income/1000)}">Rs ${Math.round(income/1000)}K</span>`,'Total income','#3ddc97','💵','+'+state.transactions.filter(t=>t.type==='income'&&t.month==='Jun').length+' this month')}
-    ${kpi(`<span class="kpi-animate" data-target="${lowStock}">${lowStock}</span>`,'Low stock alerts','#ff5c5c','⚠️',lowStock?'Needs reorder':'All good')}
+    ${kpi(`<span class="kpi-animate" data-target="${activeShips}">${activeShips}</span>`,'Active shipments','#ff8a3d','🚚','In motion', 'Shipments')}
+    ${kpi(`<span class="kpi-animate" data-target="${Math.round(income/1000)}">Rs ${Math.round(income/1000)}K</span>`,'Total income','#3ddc97','💵','+'+state.transactions.filter(t=>t.type==='income'&&t.month==='Jun').length+' this month', 'Payments')}
+    ${kpi(`<span class="kpi-animate" data-target="${lowStock}">${lowStock}</span>`,'Low stock alerts','#ff5c5c','⚠️',lowStock?'Needs reorder':'All good', 'Stock')}
   </div>
   <div class="grid3">
-    ${kpi(`<span class="kpi-animate" data-target="${Math.round(unpaidSal/1000)}">Rs ${Math.round(unpaidSal/1000)}K</span>`,'Salary outstanding','#ffbe3d','💰',state.salaries.filter(s=>s.status==='unpaid').length+' unpaid')}
-    ${kpi(`<span class="kpi-animate" data-target="${totalBilties}">${totalBilties}</span>`,'Total Bilties (بلٹی)','#ff8a3d','📜',totalBilties+' goods receipt(s)')}
-    ${kpi(`<span class="kpi-animate" data-target="${totalChallans}">${totalChallans}</span>`,'Total Challans (چالان)','#ffbe3d','📋',totalChallans+' loading sheet(s)')}
+    ${kpi(`<span class="kpi-animate" data-target="${Math.round(unpaidSal/1000)}">Rs ${Math.round(unpaidSal/1000)}K</span>`,'Salary outstanding','#ffbe3d','💰',state.salaries.filter(s=>s.status==='unpaid').length+' unpaid', 'Salaries')}
+    ${kpi(`<span class="kpi-animate" data-target="${totalBilties}">${totalBilties}</span>`,'Total Bilties (بلٹی)','#ff8a3d','📜',totalBilties+' goods receipt(s)', 'Bilties')}
+    ${kpi(`<span class="kpi-animate" data-target="${totalChallans}">${totalChallans}</span>`,'Total Challans (چالان)','#ffbe3d','📋',totalChallans+' loading sheet(s)', 'Challans')}
   </div>
   <div class="grid2" style="margin-bottom:14px">
     <div class="panel"><div class="section-head"><div class="section-label">📈 Income vs Expenses (Monthly)</div></div><div class="chart-wrap"><canvas id="chart-revenue"></canvas></div></div>
@@ -1558,10 +1559,10 @@ function staffDashboardView(){
   </div>
 
   <div class="grid4">
-    ${kpi(myActive,'My active trips','#ff8a3d','🚚','In motion')}
-    ${kpi(myDelivered,'Trips delivered','#3ddc97','✅','This year')}
-    ${kpi(presentDays,'Days present','#58a6ff','🗓️',myAtt.length+' total marked')}
-    ${kpi(lowStock,'Low stock items','#ff5c5c','📦',lowStock?'Alert!':'All good')}
+    ${kpi(myActive,'My active trips','#ff8a3d','🚚','In motion', 'Shipments')}
+    ${kpi(myDelivered,'Trips delivered','#3ddc97','✅','This year', 'Shipments')}
+    ${kpi(presentDays,'Days present','#58a6ff','🗓️',myAtt.length+' total marked', 'Attendance')}
+    ${kpi(lowStock,'Low stock items','#ff5c5c','📦',lowStock?'Alert!':'All good', 'Stock')}
   </div>
 
   <div class="grid2">
