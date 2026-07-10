@@ -753,7 +753,7 @@ window.onerror = function(msg, url, line) {
 
 // Automatic PWA Cache Storage Purge to force latest files
 (function(){
-  const CURRENT_VER = 'hbk-fleet-v13';
+  const CURRENT_VER = 'hbk-fleet-v14';
   if (localStorage.getItem('portal_pwa_ver') !== CURRENT_VER) {
     localStorage.setItem('portal_pwa_ver', CURRENT_VER);
     if ('caches' in window) {
@@ -3798,7 +3798,12 @@ function startTelemetryStream() {
 // ══════════════════════════════════════════════════════
 //  RENDER SYSTEM
 // ══════════════════════════════════════════════════════
+let lastSection = null;
 function renderContent(){
+  if (state.section !== lastSection) {
+    state.search = '';
+    lastSection = state.section;
+  }
   if (telemetryInterval) { clearInterval(telemetryInterval); telemetryInterval = null; }
   if (telemetryStreamInterval) { clearInterval(telemetryStreamInterval); telemetryStreamInterval = null; }
 
