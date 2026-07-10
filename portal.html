@@ -751,6 +751,21 @@ window.onerror = function(msg, url, line) {
   }
 };
 
+// Automatic PWA Cache Storage Purge to force latest files
+(function(){
+  const CURRENT_VER = 'hbk-fleet-v11';
+  if (localStorage.getItem('portal_pwa_ver') !== CURRENT_VER) {
+    localStorage.setItem('portal_pwa_ver', CURRENT_VER);
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        Promise.all(names.map(name => caches.delete(name))).then(() => {
+          window.location.reload(true);
+        });
+      });
+    }
+  }
+})();
+
 // ══════════════════════════════════════════════════════
 //  STATE & PERSISTENCE
 // ══════════════════════════════════════════════════════
