@@ -207,6 +207,7 @@ a{color:var(--accent);text-decoration:none}
   border:1px solid var(--line);background:rgba(255,255,255,.035);color:var(--muted);
   font-size:.8rem;font-weight:600;transition:all .15s;cursor:pointer}
 .quick-btn:hover{color:var(--text);border-color:rgba(255,138,61,.3);background:rgba(255,138,61,.06)}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── SHIPMENT ── */
 .ship-layout{display:grid;grid-template-columns:310px 1fr;gap:13px}
@@ -1187,7 +1188,7 @@ function navView(){
     if($('#emailText'))$('#emailText').textContent=`${resolvedPerson.role} — ${state.email}`;
   }
   $('#roleNote').textContent=isAdmin?'Full operations access':'Staff — limited access';
-  $('#signOut').onclick=()=>{state.authenticated=false;state.email='';state.displayName='';saveState();render()};
+  $('#signOut').onclick=()=>{state.authenticated=false;state.email='';state.displayName='';state.activeWarehouse=null;saveState();render()};
   if($('#sidebarCompany'))$('#sidebarCompany').textContent=state.settings?.companyName||'HBK JADOON';
   renderMobileNavBar();
 }
@@ -1291,7 +1292,8 @@ function renderWarehouseToggles(){
 }
 
 window.toggleWarehouse=function(wh){
-  if(state.activeWarehouse===wh){
+  // wh is either 'Karachi', 'Lahore', or null (close)
+  if(wh===null||state.activeWarehouse===wh){
     state.activeWarehouse=null;
   }else{
     state.activeWarehouse=wh;
@@ -1854,7 +1856,7 @@ function invoicesView(){
 
 function biltiesView(){
   const q=state.search.trim().toLowerCase();
-  const filtered=state.bilties.filter(b=>!q||[b.id,b.sender,b.receiver,b.destination].some(v=>(v||'').toLowerCase().includes(q)));
+  const filtered=state.bilties.filter(b=>!q||[b.id,b.sender,b.receiver,b.origin,b.dest,b.destination,b.description].some(v=>(v||'').toLowerCase().includes(q)));
   const totalBiltys=state.bilties.length;
   const totalWeight=state.bilties.reduce((a,b)=>a+(+b.weight||0),0);
   const totalBalance=state.bilties.reduce((a,b)=>a+(+b.balance||0),0);
@@ -3347,7 +3349,7 @@ function printBilty(bilty){
         <div class="meta-item"><span><strong>Bilty No. (بلٹی نمبر):</strong></span> <span style="font-weight:bold;color:#cc0000">#${bilty.id}</span></div>
         <div class="meta-item"><span><strong>Date (تاریخ):</strong></span> <span>${bilty.date}</span></div>
         <div class="meta-item"><span><strong>From (سے):</strong></span> <span><strong>${bilty.origin}</strong></span></div>
-        <div class="meta-item"><span><strong>To (تا):</strong></span> <span><strong>${bilty.destination}</strong></span></div>
+        <div class="meta-item"><span><strong>To (تا):</strong></span> <span><strong>${bilty.destination||bilty.dest||''}</strong></span></div>
         <div class="meta-item"><span><strong>Sender (بھیجنے والے):</strong></span> <span>${bilty.sender}</span></div>
         <div class="meta-item"><span><strong>Receiver (لینے والے):</strong></span> <span>${bilty.receiver}</span></div>
       </div>
@@ -3465,12 +3467,12 @@ function printChallan(challan){
       <div class="meta-grid">
         <div class="meta-item"><span><strong>Challan No:</strong></span> <span style="font-weight:bold;color:#cc0000">#${challan.id}</span></div>
         <div class="meta-item"><span><strong>Date (تاریخ):</strong></span> <span>${challan.date}</span></div>
-        <div class="meta-item"><span><strong>Vehicle No:</strong></span> <span><strong>${challan.truckNo}</strong></span></div>
-        <div class="meta-item"><span><strong>Driver Name:</strong></span> <span>${challan.driverName}</span></div>
-        <div class="meta-item"><span><strong>Driver Phone:</strong></span> <span>${challan.driverPhone||'—'}</span></div>
+        <div class="meta-item"><span><strong>Vehicle No:</strong></span> <span><strong>${challan.truck||challan.truckNo||'—'}</strong></span></div>
+        <div class="meta-item"><span><strong>Driver Name:</strong></span> <span>${challan.driver||challan.driverName||'—'}</span></div>
+        <div class="meta-item"><span><strong>Driver Phone:</strong></span> <span>${challan.phone||challan.driverPhone||'—'}</span></div>
         <div class="meta-item"><span><strong>Driver Freight:</strong></span> <span>Rs. ${(+challan.driverFreight).toLocaleString()}</span></div>
-        <div class="meta-item"><span><strong>Route From:</strong></span> <span>${challan.senderName}</span></div>
-        <div class="meta-item"><span><strong>Route To:</strong></span> <span>${challan.receiverName}</span></div>
+        <div class="meta-item"><span><strong>Route From:</strong></span> <span>${challan.sender||challan.senderName||'—'}</span></div>
+        <div class="meta-item"><span><strong>Route To:</strong></span> <span>${challan.receiver||challan.receiverName||'—'}</span></div>
       </div>
       
       <table>
