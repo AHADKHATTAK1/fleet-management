@@ -833,6 +833,12 @@ const SEED={
     {id:'INV-0002',shipmentId:'WB-48213',client:'Northbridge Foods',amount:62000,date:'Jun 30',status:'unpaid',dueDate:'Jul 14',notes:''},
   ],
   attendance:[],
+  bilties:[
+    {id:'6428',date:'2026-07-08',origin:'Karachi',destination:'Lahore',sender:'Calder Steel Co.',receiver:'Lahore Steel Depot',qty:120,description:'Steel rods & angles',weight:5000,freight:65000,advance:25000,balance:40000}
+  ],
+  challans:[
+    {id:'319',date:'2026-07-09',truckNo:'TRK-0731',driverName:'Ali Raza',driverPhone:'0301-1234567',senderName:'HBK Jadoon',receiverName:'Lahore Station',biltyIds:['6428'],driverFreight:15000}
+  ],
   activityLog:[
     {id:'ACT-001',action:'Shipment delivered',module:'Shipments',details:'WB-48177 marked delivered',by:'admin@hbkjadoon.pk',at:'Jun 30, 2026 8:52 AM'},
     {id:'ACT-002',action:'Salary paid',module:'Salaries',details:'Ali Raza June 2026 — Rs 43,000',by:'admin@hbkjadoon.pk',at:'Jun 30, 2026 5:00 PM'},
@@ -854,11 +860,13 @@ const state={
 if(!saved){
   ['shipments','stock','receiving','receivingLines','transactions','staff','salaries',
    'vehicles','fuelLogs','maintenance','clients','stockMovements','invoices','attendance',
-   'activityLog','settings'].forEach(k=>{if(SEED[k])state[k]=JSON.parse(JSON.stringify(SEED[k]));});
+   'bilties','challans','activityLog','settings'].forEach(k=>{if(SEED[k])state[k]=JSON.parse(JSON.stringify(SEED[k]));});
 }
 if(!state.settings)state.settings=JSON.parse(JSON.stringify(SEED.settings));
 if(!state.invoices)state.invoices=JSON.parse(JSON.stringify(SEED.invoices));
 if(!state.attendance)state.attendance=[];
+if(!state.bilties)state.bilties=JSON.parse(JSON.stringify(SEED.bilties));
+if(!state.challans)state.challans=JSON.parse(JSON.stringify(SEED.challans));
 if(!state.activityLog)state.activityLog=JSON.parse(JSON.stringify(SEED.activityLog));
 
 // ══════════════════════════════════════════════════════
@@ -1043,10 +1051,10 @@ function animateKPIs(){
 // ══════════════════════════════════════════════════════
 //  AUTH & NAV
 // ══════════════════════════════════════════════════════
-const SECTIONS_ADMIN=['Dashboard','Shipments','Optimizer','Invoices','Clients','Staff','Salaries','Attendance','Vehicles','Fuel Logs','Maintenance','Stock','Receiving','Payments','Reports','Activity Log','Settings','Guide'];
-const SECTIONS_STAFF=['Dashboard','Shipments','Stock','Receiving','Payments','Reports','Guide'];
-const NAV_ICONS={Dashboard:'📊',Shipments:'🚚',Optimizer:'🛣️',Invoices:'🧾',Clients:'🏢',Staff:'👥',Salaries:'💰',Attendance:'🗓️',Vehicles:'🚛',['Fuel Logs']:'⛽',Maintenance:'🔧',Stock:'📦',Receiving:'📄',Payments:'💳',Reports:'📑',['Activity Log']:'📋',Settings:'⚙️',Guide:'❓'};
-const NAV_GROUPS={Management:['Shipments','Optimizer','Invoices','Clients'],HR:['Staff','Salaries','Attendance'],Fleet:['Vehicles','Fuel Logs','Maintenance'],Operations:['Stock','Receiving','Payments'],Analytics:['Reports','Activity Log'],System:['Settings','Guide']};
+const SECTIONS_ADMIN=['Dashboard','Shipments','Optimizer','Bilties','Challans','Invoices','Clients','Staff','Salaries','Attendance','Vehicles','Fuel Logs','Maintenance','Stock','Receiving','Payments','Reports','Activity Log','Settings','Guide'];
+const SECTIONS_STAFF=['Dashboard','Shipments','Bilties','Challans','Stock','Receiving','Payments','Reports','Guide'];
+const NAV_ICONS={Dashboard:'📊',Shipments:'🚚',Optimizer:'🛣️',Bilties:'📜',Challans:'📋',Invoices:'🧾',Clients:'🏢',Staff:'👥',Salaries:'💰',Attendance:'🗓️',Vehicles:'🚛',['Fuel Logs']:'⛽',Maintenance:'🔧',Stock:'📦',Receiving:'📄',Payments:'💳',Reports:'📑',['Activity Log']:'📋',Settings:'⚙️',Guide:'❓'};
+const NAV_GROUPS={Management:['Shipments','Optimizer','Bilties','Challans','Invoices','Clients'],HR:['Staff','Salaries','Attendance'],Fleet:['Vehicles','Fuel Logs','Maintenance'],Operations:['Stock','Receiving','Payments'],Analytics:['Reports','Activity Log'],System:['Settings','Guide']};
 
 function loginView(){
   $('#login').innerHTML=`
@@ -1764,6 +1772,125 @@ function invoicesView(){
     </table>
   </div>`;
 }
+
+function biltiesView(){
+  const q=state.search.trim().toLowerCase();
+  const filtered=state.bilties.filter(b=>!q||[b.id,b.sender,b.receiver,b.destination].some(v=>(v||'').toLowerCase().includes(q)));
+  const totalBiltys=state.bilties.length;
+  const totalWeight=state.bilties.reduce((a,b)=>a+(+b.weight||0),0);
+  const totalBalance=state.bilties.reduce((a,b)=>a+(+b.balance||0),0);
+  return `
+  <div class="grid3">
+    ${kpi(totalBiltys,'Total Bilties','#ff8a3d','📜')}
+    ${kpi(totalWeight.toLocaleString()+' kg','Total Cargo Weight','#3ddc97','⚖️')}
+    ${kpi(money(totalBalance),'Total Outstanding Balance','#ff5c5c','⏳')}
+  </div>
+  <div class="panel">
+    <div class="section-head">
+      <div class="section-label">Goods Receipts (Bilties) — ${totalBiltys} total</div>
+      <button class="btn btn-primary" data-open="bilty">+ New Bilty (بلٹی)</button>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Bilty No.</th>
+          <th>Date</th>
+          <th>Route</th>
+          <th>Sender / Consignor</th>
+          <th>Receiver / Consignee</th>
+          <th>Goods Description</th>
+          <th>Weight</th>
+          <th>Total Freight</th>
+          <th>Advance</th>
+          <th>Balance</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map(b=>`
+        <tr>
+          <td class="mono" style="color:#ffcfaa;font-weight:700">#${b.id}</td>
+          <td class="muted">${b.date}</td>
+          <td><strong>${b.origin}</strong> → <strong>${b.destination}</strong></td>
+          <td>${b.sender}</td>
+          <td>${b.receiver}</td>
+          <td><span style="background:rgba(255,255,255,.05);padding:.2rem .5rem;border-radius:6px;font-size:.8rem">${b.qty} ${b.description}</span></td>
+          <td class="mono">${(+b.weight).toLocaleString()} kg</td>
+          <td style="font-weight:700">${money(b.freight)}</td>
+          <td style="color:var(--good)">${money(b.advance)}</td>
+          <td style="font-weight:800;color:${+b.balance>0?'#ffb1b1':'var(--good)'}">${money(b.balance)}</td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm btn-info" data-print-bilty="${b.id}">🖨️ Print</button>
+              <button class="icon-btn btn-danger" data-del-bilty="${b.id}">🗑</button>
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function challansView(){
+  const q=state.search.trim().toLowerCase();
+  const filtered=state.challans.filter(c=>!q||[c.id,c.truckNo,c.driverName].some(v=>(v||'').toLowerCase().includes(q)));
+  const totalTrips=state.challans.length;
+  const activeTrucks=new Set(state.challans.map(c=>c.truckNo)).size;
+  const totalDispatched=state.challans.reduce((a,b)=>a+(+b.driverFreight||0),0);
+  return `
+  <div class="grid3">
+    ${kpi(totalTrips,'Total Trip Challans','#ffbe3d','📋')}
+    ${kpi(activeTrucks,'Active Fleet Vehicles','#3ddc97','🚛')}
+    ${kpi(money(totalDispatched),'Driver Paid Freight','#58a6ff','💸')}
+  </div>
+  <div class="panel">
+    <div class="section-head">
+      <div class="section-label">Loading Sheets &amp; Trip Challans — ${totalTrips} total</div>
+      <button class="btn btn-primary" data-open="challan">+ New Challan (چالان)</button>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Challan No.</th>
+          <th>Date</th>
+          <th>Vehicle</th>
+          <th>Driver Details</th>
+          <th>Route</th>
+          <th>Loaded Bilties</th>
+          <th>Driver Freight</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map(c=>`
+        <tr>
+          <td class="mono" style="color:#ffcfaa;font-weight:700">#${c.id}</td>
+          <td class="muted">${c.date}</td>
+          <td class="mono" style="font-weight:700">${c.truckNo}</td>
+          <td>
+            <div style="font-weight:600">${c.driverName}</div>
+            <div class="muted mono" style="font-size:.74rem">${c.driverPhone||'—'}</div>
+          </td>
+          <td>${c.senderName} → ${c.receiverName}</td>
+          <td>
+            <div style="display:flex;flex-wrap:wrap;gap:4px">
+              ${(c.biltyIds||[]).map(bid=>`<span style="background:rgba(255,138,61,.14);color:#ff8a3d;padding:2px 6px;border-radius:6px;font-size:.74rem;font-weight:700">#${bid}</span>`).join('')}
+            </div>
+          </td>
+          <td style="font-weight:800;color:var(--good)">${money(c.driverFreight)}</td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm btn-info" data-print-challan="${c.id}">🖨️ Print</button>
+              <button class="icon-btn btn-danger" data-del-challan="${c.id}">🗑</button>
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+
 
 function clientsView(){
   const q=state.search.trim().toLowerCase();
@@ -2517,6 +2644,68 @@ function buildModalHTML(){
     <div class="field-row"><div class="field"><label>Category</label><input id="payCat" placeholder="Fuel, Salary, Maintenance..."></div><div class="field"><label>Amount (Rs)</label><input id="payAmt" type="number" value="0"></div></div>
     ${state.role==='Admin'?`<div class="field"><label>Type</label><select id="payType"><option value="expense">Expense</option><option value="income">Income</option></select></div>`:''}`,
     `<button class="btn" data-close="payment">Cancel</button><button class="btn btn-primary" id="savePayment">Save</button>`)}
+
+  <!-- ── CUSTOM BILTY MODAL ── -->
+  ${modal('modalBilty', m.bilty, '📜 New Goods Receipt (Bilty / بلٹی)', `
+    <datalist id="cltList">${state.clients.map(c=>`<option value="${c.name}">`).join('')}</datalist>
+    <div class="field-row">
+      <div class="field"><label>Bilty No. (بلٹی نمبر)</label><input id="bilId" type="text" value="${state.bilties.length + 6429}"></div>
+      <div class="field"><label>Date (تاریخ)</label><input id="bilDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>From (سے کراچی)</label><input id="bilOrigin" value="Karachi" placeholder="Origin Station"></div>
+      <div class="field"><label>To (تا لاہور)</label><input id="bilDest" value="Lahore" placeholder="Destination City"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Sender / Consignor (بھیجنے والے)</label><input id="bilSender" list="cltList" placeholder="Sender name"></div>
+      <div class="field"><label>Receiver / Consignee (لینے والے)</label><input id="bilReceiver" list="cltList" placeholder="Receiver name"></div>
+    </div>
+    <div class="field-row3">
+      <div class="field"><label>Qty (تعداد)</label><input id="bilQty" type="number" value="1"></div>
+      <div class="field"><label>Description (تفصیل مال)</label><input id="bilDesc" placeholder="e.g. Wheat bags"></div>
+      <div class="field"><label>Weight (وزن kg)</label><input id="bilWeight" type="number" value="0"></div>
+    </div>
+    <div class="field-row3">
+      <div class="field"><label>Total Freight (کل کرایہ)</label><input id="bilFreight" type="number" value="0" oninput="document.getElementById('bilBalance').value = (this.value - document.getElementById('bilAdvance').value)"></div>
+      <div class="field"><label>Advance Paid (ایڈوانس)</label><input id="bilAdvance" type="number" value="0" oninput="document.getElementById('bilBalance').value = (document.getElementById('bilFreight').value - this.value)"></div>
+      <div class="field"><label>Outstanding Balance (بقایا)</label><input id="bilBalance" type="number" value="0" readonly style="background:rgba(255,255,255,0.03);color:#ff9090;font-weight:700"></div>
+    </div>
+  `, `<button class="btn" data-close="bilty">Cancel</button><button class="btn btn-primary" id="saveBilty">Create Bilty</button>`)}
+
+  <!-- ── CUSTOM CHALLAN MODAL ── -->
+  ${modal('modalChallan', m.challan, '📋 New Trip Challan (چالان)', `
+    <div class="field-row">
+      <div class="field"><label>Challan No. (چالان نمبر)</label><input id="chaId" type="text" value="${state.challans.length + 320}"></div>
+      <div class="field"><label>Date (تاریخ)</label><input id="chaDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Vehicle (گاڑی نمبر)</label><select id="chaTruck">${vOpts}</select></div>
+      <div class="field"><label>Driver Name (ڈرائیور نام)</label><select id="chaDriver" onchange="const p=state.staff.find(x=>x.name===this.value); if(p) document.getElementById('chaPhone').value=p.phone||''">${state.staff.filter(x=>x.role==='Driver').map(d=>`<option value="${d.name}">${d.name}</option>`).join('')}</select></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Driver Phone (موبائل نمبر)</label><input id="chaPhone" value="${state.staff.filter(x=>x.role==='Driver')[0]?.phone||''}" placeholder="Driver mobile"></div>
+      <div class="field"><label>Driver Freight / Pay (کرایہ ڈرائیور)</label><input id="chaDriverFreight" type="number" value="0"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Sender Location</label><input id="chaSender" value="Karachi Station"></div>
+      <div class="field"><label>Receiver Location</label><input id="chaReceiver" value="Lahore Station"></div>
+    </div>
+    <div class="field" style="margin-top:10px">
+      <label style="font-weight:700;color:var(--accent);margin-bottom:8px">Select Bilties to Load (بلٹیاں لوڈ کریں)</label>
+      <div style="max-height:160px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;padding:8px;background:rgba(0,0,0,0.2)">
+        ${(() => {
+          const linkedBilties = new Set(state.challans.flatMap(c => c.biltyIds || []));
+          const available = state.bilties.filter(b => !linkedBilties.has(b.id));
+          return available.map(b => `
+            <label style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:8px;margin-bottom:4px;cursor:pointer;font-size:.8rem">
+              <input type="checkbox" name="chaBilties" value="${b.id}" style="width:auto">
+              <span><strong>#${b.id}</strong> — ${b.sender} → ${b.receiver} (${b.qty} ${b.description})</span>
+            </label>
+          `).join('') || '<div class="muted" style="padding:10px;font-size:.8rem;text-align:center">No unassigned Bilties available</div>';
+        })()}
+      </div>
+    </div>
+  `, `<button class="btn" data-close="challan">Cancel</button><button class="btn btn-primary" id="saveChallan">Create Challan</button>`)}
   `;
 }
 
@@ -2674,6 +2863,60 @@ function wireModals(){
     state.modals.payment=false;logActivity('Transaction logged','Payments',desc);saveState();toast(state.role==='Admin'?`${id} recorded`:'Expense submitted');render();
   };
 
+  // SAVE BILTY
+  if(m.bilty&&$('#saveBilty'))$('#saveBilty').onclick=()=>{
+    const id=$('#bilId').value.trim();
+    const sender=$('#bilSender').value.trim();
+    const receiver=$('#bilReceiver').value.trim();
+    if(!id||!sender||!receiver)return toast('Bilty No., Sender and Receiver are required','bad');
+    const freight=+$('#bilFreight').value||0;
+    const advance=+$('#bilAdvance').value||0;
+    const balance=freight-advance;
+    const bilty={
+      id,
+      date:$('#bilDate').value,
+      origin:$('#bilOrigin').value.trim()||'Karachi',
+      destination:$('#bilDest').value.trim()||'Lahore',
+      sender,
+      receiver,
+      qty:+$('#bilQty').value||1,
+      description:$('#bilDesc').value.trim()||'Goods',
+      weight:+$('#bilWeight').value||0,
+      freight,
+      advance,
+      balance
+    };
+    state.bilties.unshift(bilty);
+    state.modals.bilty=false;
+    logActivity('Bilty created','Bilties',`#${id} — ${sender} to ${receiver}`);
+    saveState();toast(`Bilty #${id} created`);render();
+  };
+
+  // SAVE CHALLAN
+  if(m.challan&&$('#saveChallan'))$('#saveChallan').onclick=()=>{
+    const id=$('#chaId').value.trim();
+    const truckNo=$('#chaTruck').value;
+    const driverName=$('#chaDriver').value;
+    if(!id)return toast('Challan No. is required','bad');
+    const biltyIds=[];
+    $$('input[name="chaBilties"]:checked').forEach(cb=>biltyIds.push(cb.value));
+    const challan={
+      id,
+      date:$('#chaDate').value,
+      truckNo,
+      driverName,
+      driverPhone:$('#chaPhone').value.trim(),
+      senderName:$('#chaSender').value.trim()||'Karachi Station',
+      receiverName:$('#chaReceiver').value.trim()||'Lahore Station',
+      biltyIds,
+      driverFreight:+$('#chaDriverFreight').value||0
+    };
+    state.challans.unshift(challan);
+    state.modals.challan=false;
+    logActivity('Trip Challan created','Challans',`#${id} on truck ${truckNo}`);
+    saveState();toast(`Challan #${id} created`);render();
+  };
+
   // APPROVE ACTIONS
   $$('[data-approve-ship]').forEach(b=>b.onclick=()=>{const s=state.shipments.find(x=>x.id===b.dataset.approveShip);if(!s)return;s.status='delivered';s.progress=1;logActivity('Shipment delivered','Shipments',s.id);saveState();toast(`${s.id} delivered`);render()});
   $$('[data-approve-receiving]').forEach(b=>b.onclick=()=>{const slip=state.receiving.find(r=>r.id===b.dataset.approveReceiving);if(!slip)return;(state.receivingLines[slip.id]||[]).forEach(l=>{const si=state.stock.find(s=>s.item===l.name);if(si)si.qty=(si.qty||0)+(l.received||0);});slip.approval='approved';slip.status='received';logActivity('Receiving approved','Receiving',slip.id);saveState();toast(`${slip.id} approved`);render()});
@@ -2722,6 +2965,16 @@ function wireModals(){
     const person=state.staff.find(x=>x.id===b.dataset.printSalslip);if(!person)return;
     const latestSal=state.salaries.filter(s=>s.staffId===person.id)[0];
     if(latestSal)printSalarySlip(latestSal);else toast('No salary record found for this employee','bad');
+  });
+
+  // PRINT BILTY & CHALLAN
+  $$('[data-print-bilty]').forEach(b=>b.onclick=()=>{
+    const bil=state.bilties.find(x=>x.id===b.dataset.printBilty);
+    if(bil)printBilty(bil);
+  });
+  $$('[data-print-challan]').forEach(b=>b.onclick=()=>{
+    const cha=state.challans.find(x=>x.id===b.dataset.printChallan);
+    if(cha)printChallan(cha);
   });
 
   // TOGGLE STAFF STATUS
@@ -2788,6 +3041,16 @@ function wireModals(){
   $$('[data-del-invoice]').forEach(b=>b.onclick=()=>{
     if(!confirm('Delete invoice?'))return;
     state.invoices=state.invoices.filter(x=>x.id!==b.dataset.delInvoice);
+    saveState();toast('Deleted','bad');render();
+  });
+  $$('[data-del-bilty]').forEach(b=>b.onclick=()=>{
+    if(!confirm('Delete Bilty?'))return;
+    state.bilties=state.bilties.filter(x=>x.id!==b.dataset.delBilty);
+    saveState();toast('Deleted','bad');render();
+  });
+  $$('[data-del-challan]').forEach(b=>b.onclick=()=>{
+    if(!confirm('Delete Challan?'))return;
+    state.challans=state.challans.filter(x=>x.id!==b.dataset.delChallan);
     saveState();toast('Deleted','bad');render();
   });
 
@@ -2916,6 +3179,246 @@ function printSalarySlip(sal){
   win.document.close();win.focus();setTimeout(()=>win.print(),500);
 }
 
+function printBilty(bilty){
+  const win=window.open('','_blank');
+  if(!win) { toast('⚠️ Please allow popups to print Bilty', 'warn'); return; }
+  win.document.write(`
+  <html>
+  <head>
+    <title>Bilty #${bilty.id}</title>
+    <style>
+      body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; color: #222; direction: ltr; }
+      .bilty-container { border: 4px double #0d3559; padding: 15px; border-radius: 8px; max-width: 800px; margin: 0 auto; background: #fff; }
+      .top-heading { text-align: center; border-bottom: 2px solid #0d3559; padding-bottom: 10px; margin-bottom: 12px; position: relative; }
+      .logo-main { width: 64px; height: 64px; border-radius: 50%; background: #0d3559; color: #fff; display: inline-grid; place-items: center; font-weight: 900; font-size: 1.2rem; float: left; margin-top: 5px; }
+      .top-heading h1 { font-size: 1.8rem; margin: 0; color: #cc0000; font-weight: bold; }
+      .top-heading h2 { font-size: 1.25rem; margin: 3px 0; color: #0d3559; font-weight: 700; }
+      .contact-strip { font-size: 0.8rem; display: flex; justify-content: space-between; margin-top: 5px; color: #444; border-top: 1px dashed #ccc; padding-top: 4px; }
+      .meta-info { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; font-size: 0.9rem; }
+      .meta-item { border-bottom: 1px solid #ddd; padding: 4px 0; display: flex; justify-content: space-between; }
+      .meta-item strong { color: #0d3559; }
+      table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+      th { background: #0d3559; color: #fff; text-align: left; padding: 8px; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; }
+      th.ur { text-align: right; }
+      td { padding: 10px 8px; border-bottom: 1px solid #ddd; font-size: 0.9rem; }
+      .freight-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px; background: #f3f7fa; border-radius: 6px; border: 1px solid #cbdde9; margin-bottom: 15px; text-align: center; }
+      .freight-box div { border-right: 1px solid #cbdde9; }
+      .freight-box div:last-child { border-right: 0; }
+      .freight-title { font-size: 0.8rem; color: #555; margin-bottom: 4px; font-weight: 600; }
+      .freight-val { font-size: 1.25rem; font-weight: bold; color: #0d3559; }
+      .rules-section { border: 1px solid #ccc; padding: 10px; border-radius: 6px; background: #fafafa; margin-bottom: 15px; font-size: 0.72rem; line-height: 1.45; direction: rtl; text-align: right; }
+      .rules-section h3 { margin: 0 0 5px; color: #cc0000; font-size: 0.8rem; }
+      .rules-section ol { margin: 0; padding-right: 15px; }
+      .rules-section li { margin-bottom: 3px; }
+      .bottom-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; padding-top: 15px; border-top: 1px dashed #ccc; }
+      .signature-space { width: 200px; text-align: center; font-size: 0.85rem; color: #444; border-top: 1px solid #222; padding-top: 4px; }
+      .office-info { font-size: 0.75rem; color: #555; text-align: center; border-top: 1px solid #0d3559; padding-top: 8px; }
+      @media print {
+        body { padding: 0; }
+        .bilty-container { border: none; padding: 0; }
+        button { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bilty-container">
+      <div class="top-heading">
+        <div class="logo-main">HBKJ</div>
+        <h1>حاجی برکت خان جدون گڈز ٹرانسپورٹ کمپنی (رجسٹرڈ)</h1>
+        <h2>HAJI BARKAT KHAN JADOON GOODS TRANSPORT CO.</h2>
+        <div style="font-size:0.85rem;color:#777">Karachi - Lahore - Rawalpindi - All Pakistan Transport Services</div>
+        
+        <div class="contact-strip">
+          <div><strong>طاہر خان جدون:</strong> 0333-3062048 / 0302-2553917</div>
+          <div><strong>شفیق چغتائی:</strong> 0301-4977921 / 0300-0841354</div>
+        </div>
+      </div>
+      
+      <div class="meta-info">
+        <div class="meta-item"><span><strong>Bilty No. (بلٹی نمبر):</strong></span> <span style="font-weight:bold;color:#cc0000">#${bilty.id}</span></div>
+        <div class="meta-item"><span><strong>Date (تاریخ):</strong></span> <span>${bilty.date}</span></div>
+        <div class="meta-item"><span><strong>From (سے):</strong></span> <span><strong>${bilty.origin}</strong></span></div>
+        <div class="meta-item"><span><strong>To (تا):</strong></span> <span><strong>${bilty.destination}</strong></span></div>
+        <div class="meta-item"><span><strong>Sender (بھیجنے والے):</strong></span> <span>${bilty.sender}</span></div>
+        <div class="meta-item"><span><strong>Receiver (لینے والے):</strong></span> <span>${bilty.receiver}</span></div>
+      </div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th style="width:10%">Qty<br><span style="font-size:0.75rem">تعداد</span></th>
+            <th style="width:70%">Description of Goods<br><span style="font-size:0.75rem">تفصیل مال</span></th>
+            <th style="width:20%">Weight (kg)<br><span style="font-size:0.75rem">وزن</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>${bilty.qty}</strong></td>
+            <td>${bilty.description}</td>
+            <td class="mono">${(+bilty.weight).toLocaleString()} kg</td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div class="freight-box">
+        <div>
+          <div class="freight-title">Total Freight (کل کرایہ)</div>
+          <div class="freight-val">Rs. ${(+bilty.freight).toLocaleString()}</div>
+        </div>
+        <div>
+          <div class="freight-title">Advance Paid (ایڈوانس)</div>
+          <div class="freight-val" style="color:green">Rs. ${(+bilty.advance).toLocaleString()}</div>
+        </div>
+        <div>
+          <div class="freight-title">Outstanding Balance (بقایا)</div>
+          <div class="freight-val" style="color:#cc0000">Rs. ${(+bilty.balance).toLocaleString()}</div>
+        </div>
+      </div>
+      
+      <div class="rules-section">
+        <h3>قواعد و ضوابط (Terms and Conditions):</h3>
+        <ol>
+          <li>بیوپاری کو چاہئے کہ مال وصول کرتے وقت اچھی طرح معائنہ کرے ورنہ بعد میں کوئی شکایت نہیں سنی جائے گی۔</li>
+          <li>غلط بیانی کی صورت میں (Misdeclaration) کی تمام تر ذمہ داری بیوپاری پر عائد ہوگی۔</li>
+          <li>بل/بلٹی کی گمشدگی کی صورت میں کسی قسم کا کلیم نہیں مانا جائے گا۔</li>
+          <li>تیل، گھی، لیکویڈ یا شیشہ کی ٹوٹ پھوٹ کا ذمہ دار ٹرانسپورٹ نہیں ہوگا۔</li>
+          <li>قدرتی آفات، حادثات، چوری، ڈکیتی، گاڑی گن پوائنٹ پر چھن جانا اور آگ لگنے کی صورت میں کمپنی کسی قسم کا کلیم ادا نہیں کرے گی (مال انشورنس کرا کر بک کرائیں)۔</li>
+          <li>بغیر بلٹی کے مال نہیں دیا جائے گا۔</li>
+        </ol>
+      </div>
+      
+      <div class="bottom-row">
+        <div style="font-size: 0.8rem; color: #555;">
+          * 24 Hours Cargo dispatch service<br>
+          * Thank you for choosing HBK Jadoon Transport!
+        </div>
+        <div class="signature-space">
+          دستخط بکنگ کلرک (Booking Clerk Signature)
+        </div>
+      </div>
+      
+      <br>
+      <div class="office-info">
+        <strong>لاہور آفس:</strong> شیکھوپورہ روڈ پرانا ٹول پلازہ / سگیاں راوی روڈ لاہور | <strong>فون:</strong> 042-7339727 / 0301-4977921
+      </div>
+    </div>
+  </body>
+  </html>
+  `);
+  win.document.close();
+  win.focus();
+  setTimeout(()=>win.print(),500);
+}
+
+function printChallan(challan){
+  const win=window.open('','_blank');
+  if(!win) { toast('⚠️ Please allow popups to print Challan', 'warn'); return; }
+  const loadedBilties = (challan.biltyIds||[]).map(bid => state.bilties.find(b=>b.id===bid)).filter(Boolean);
+  const totalQty = loadedBilties.reduce((a,b)=>a+(+b.qty||0),0);
+  const totalWeight = loadedBilties.reduce((a,b)=>a+(+b.weight||0),0);
+  const totalFreight = loadedBilties.reduce((a,b)=>a+(+b.freight||0),0);
+  win.document.write(`
+  <html>
+  <head>
+    <title>Challan #${challan.id}</title>
+    <style>
+      body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; color: #222; }
+      .challan-container { border: 4px double #2c3e50; padding: 15px; border-radius: 8px; max-width: 850px; margin: 0 auto; background: #fff; }
+      .header-title { text-align: center; border-bottom: 2px solid #2c3e50; padding-bottom: 10px; margin-bottom: 15px; }
+      .header-title h1 { font-size: 1.8rem; margin: 0; color: #0d3559; font-weight: bold; }
+      .header-title h2 { font-size: 1.1rem; margin: 4px 0; color: #cc0000; letter-spacing: 1px; }
+      .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; font-size: 0.9rem; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #e9ecef; }
+      .meta-item { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 4px 0; }
+      .meta-item strong { color: #2c3e50; }
+      table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+      th { background: #2c3e50; color: #fff; text-align: left; padding: 8px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; border: 1px solid #34495e; }
+      td { padding: 8px; border: 1px solid #ddd; font-size: 0.85rem; }
+      .total-row { font-weight: bold; background: #f8f9fa; }
+      .total-row td { border-top: 2px solid #2c3e50; }
+      .bottom-note { font-size: 0.76rem; border: 1px solid #ddd; padding: 10px; border-radius: 6px; background: #fafafa; margin-bottom: 15px; direction: rtl; text-align: right; line-height: 1.5; }
+      .bottom-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 35px; }
+      .sig-box { width: 220px; text-align: center; font-size: 0.82rem; border-top: 1px solid #222; padding-top: 4px; }
+      @media print {
+        body { padding: 0; }
+        .challan-container { border: none; padding: 0; }
+        button { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="challan-container">
+      <div class="header-title">
+        <h1>حاجی برکت خان جدون گڈز ٹرانسپورٹ کمپنی (رجسٹرڈ)</h1>
+        <h2>TRIP CHALLAN (چالان)</h2>
+        <div style="font-size:0.8rem;color:#555">Karachi Terminal | Tahir Khan Jadoon: 0333-3062048 | Shafiq Chughtai: 0301-4977921</div>
+      </div>
+      
+      <div class="meta-grid">
+        <div class="meta-item"><span><strong>Challan No:</strong></span> <span style="font-weight:bold;color:#cc0000">#${challan.id}</span></div>
+        <div class="meta-item"><span><strong>Date (تاریخ):</strong></span> <span>${challan.date}</span></div>
+        <div class="meta-item"><span><strong>Vehicle No:</strong></span> <span><strong>${challan.truckNo}</strong></span></div>
+        <div class="meta-item"><span><strong>Driver Name:</strong></span> <span>${challan.driverName}</span></div>
+        <div class="meta-item"><span><strong>Driver Phone:</strong></span> <span>${challan.driverPhone||'—'}</span></div>
+        <div class="meta-item"><span><strong>Driver Freight:</strong></span> <span>Rs. ${(+challan.driverFreight).toLocaleString()}</span></div>
+        <div class="meta-item"><span><strong>Route From:</strong></span> <span>${challan.senderName}</span></div>
+        <div class="meta-item"><span><strong>Route To:</strong></span> <span>${challan.receiverName}</span></div>
+      </div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Bilty No.</th>
+            <th>Sender (Con.)</th>
+            <th>Receiver (Con.)</th>
+            <th>Description of Goods</th>
+            <th>Qty</th>
+            <th>Weight</th>
+            <th>Bilty Freight</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${loadedBilties.map(b => `
+            <tr>
+              <td style="font-weight:bold">#${b.id}</td>
+              <td>${b.sender}</td>
+              <td>${b.receiver}</td>
+              <td>${b.qty} ${b.description}</td>
+              <td>${b.qty}</td>
+              <td>${(+b.weight).toLocaleString()} kg</td>
+              <td>Rs. ${(+b.freight).toLocaleString()}</td>
+            </tr>
+          `).join('')}
+          ${loadedBilties.length === 0 ? `<tr><td colspan="7" style="text-align:center;color:#999;padding:20px">No Bilties loaded on this Challan.</td></tr>` : ''}
+          <tr class="total-row">
+            <td colspan="4" style="text-align:right">Total Loaded Cargo:</td>
+            <td>${totalQty}</td>
+            <td>${totalWeight.toLocaleString()} kg</td>
+            <td>Rs. ${totalFreight.toLocaleString()}</td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div class="bottom-note">
+        <strong>اقرار نامہ ڈرائیور:</strong> میں اقرار کرتا ہوں کہ یہ مال میں نے بمطابق بلٹی و چالان ہذا صحیح حالت میں سنبھال لیا ہے اور اپنے سامنے لوڈ کرایا ہے۔ میں اسے بحفاظت منزلِ مقصود پر پہنچانے کا ذمہ دار ہوں۔ اگر راستے میں میری غفلت کی وجہ سے کوئی نقصان ہوا تو اس کا ذمہ دار میں خود ہوں گا۔
+      </div>
+      
+      <div class="bottom-row">
+        <div class="sig-box">
+          دستخط ڈرائیور (Driver's Signature)
+        </div>
+        <div class="sig-box">
+          دستخط بکنگ کلرک (Booking Clerk Signature)
+        </div>
+      </div>
+    </div>
+  </body>
+  </html>
+  `);
+  win.document.close();
+  win.focus();
+  setTimeout(()=>win.print(),500);
+}
+
 function printReport(){
   const win=window.open('','_blank');
   const income=state.transactions.filter(t=>t.type==='income').reduce((a,b)=>a+b.amount,0);
@@ -2986,6 +3489,8 @@ function purgeDemoData(){
       stockMovements: [],
       invoices: [],
       attendance: [],
+      bilties: [],
+      challans: [],
       activityLog: [
         {id:'ACT-001',action:'Database Purged',module:'Settings',details:'All demo data cleared. Clean database initialized.',by:state.email||'System',at:new Date().toLocaleString()}
       ]
@@ -3175,7 +3680,8 @@ function renderContent(){
   navView();topView();
 
   const views={
-    Dashboard:dashboardView,Shipments:shipmentsView,Optimizer:optimizerView,Invoices:invoicesView,
+    Dashboard:dashboardView,Shipments:shipmentsView,Optimizer:optimizerView,
+    Bilties:biltiesView,Challans:challansView,Invoices:invoicesView,
     Clients:clientsView,Staff:staffView,Salaries:salariesView,Attendance:attendanceView,
     Vehicles:vehiclesView,['Fuel Logs']:fuelLogsView,Maintenance:maintenanceView,
     Stock:stockView,Receiving:receivingView,Payments:paymentsView,
