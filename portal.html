@@ -1811,7 +1811,7 @@ function biltiesView(){
         <tr>
           <td class="mono" style="color:#ffcfaa;font-weight:700">#${b.id}</td>
           <td class="muted">${b.date}</td>
-          <td><strong>${b.origin}</strong> → <strong>${b.destination}</strong></td>
+          <td><strong>${b.origin}</strong> → <strong>${b.dest||b.destination||''}</strong></td>
           <td>${b.sender}</td>
           <td>${b.receiver}</td>
           <td><span style="background:rgba(255,255,255,.05);padding:.2rem .5rem;border-radius:6px;font-size:.8rem">${b.qty} ${b.description}</span></td>
@@ -1833,9 +1833,9 @@ function biltiesView(){
 
 function challansView(){
   const q=state.search.trim().toLowerCase();
-  const filtered=state.challans.filter(c=>!q||[c.id,c.truckNo,c.driverName].some(v=>(v||'').toLowerCase().includes(q)));
+  const filtered=state.challans.filter(c=>!q||[c.id,c.truck||c.truckNo,c.driver||c.driverName].some(v=>(v||'').toLowerCase().includes(q)));
   const totalTrips=state.challans.length;
-  const activeTrucks=new Set(state.challans.map(c=>c.truckNo)).size;
+  const activeTrucks=new Set(state.challans.map(c=>c.truck||c.truckNo)).size;
   const totalDispatched=state.challans.reduce((a,b)=>a+(+b.driverFreight||0),0);
   return `
   <div class="grid3">
@@ -1866,12 +1866,12 @@ function challansView(){
         <tr>
           <td class="mono" style="color:#ffcfaa;font-weight:700">#${c.id}</td>
           <td class="muted">${c.date}</td>
-          <td class="mono" style="font-weight:700">${c.truckNo}</td>
+          <td class="mono" style="font-weight:700">${c.truck||c.truckNo||'—'}</td>
           <td>
-            <div style="font-weight:600">${c.driverName}</div>
-            <div class="muted mono" style="font-size:.74rem">${c.driverPhone||'—'}</div>
+            <div style="font-weight:600">${c.driver||c.driverName||'—'}</div>
+            <div class="muted mono" style="font-size:.74rem">${c.phone||c.driverPhone||'—'}</div>
           </td>
-          <td>${c.senderName} → ${c.receiverName}</td>
+          <td>${c.sender||c.senderName||'?'} → ${c.receiver||c.receiverName||'?'}</td>
           <td>
             <div style="display:flex;flex-wrap:wrap;gap:4px">
               ${(c.biltyIds||[]).map(bid=>`<span style="background:rgba(255,138,61,.14);color:#ff8a3d;padding:2px 6px;border-radius:6px;font-size:.74rem;font-weight:700">#${bid}</span>`).join('')}
@@ -2649,63 +2649,77 @@ function buildModalHTML(){
   ${modal('modalBilty', m.bilty, '📜 New Goods Receipt (Bilty / بلٹی)', `
     <datalist id="cltList">${state.clients.map(c=>`<option value="${c.name}">`).join('')}</datalist>
     <div class="field-row">
-      <div class="field"><label>Bilty No. (بلٹی نمبر)</label><input id="bilId" type="text" value="${state.bilties.length + 6429}"></div>
+      <div class="field"><label>Bilty No. (بلٹی نمبر)</label><input id="bilId" type="text" value="${(state.bilties||[]).length + 6429}" placeholder="e.g. 6429"></div>
       <div class="field"><label>Date (تاریخ)</label><input id="bilDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>From (سے کراچی)</label><input id="bilOrigin" value="Karachi" placeholder="Origin Station"></div>
-      <div class="field"><label>To (تا لاہور)</label><input id="bilDest" value="Lahore" placeholder="Destination City"></div>
+      <div class="field"><label>From / Origin (سے)</label><input id="bilOrigin" value="Karachi" placeholder="e.g. Karachi"></div>
+      <div class="field"><label>To / Destination (تا)</label><input id="bilDest" value="Lahore" placeholder="e.g. Lahore"></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Sender / Consignor (بھیجنے والے)</label><input id="bilSender" list="cltList" placeholder="Sender name"></div>
-      <div class="field"><label>Receiver / Consignee (لینے والے)</label><input id="bilReceiver" list="cltList" placeholder="Receiver name"></div>
+      <div class="field"><label>Sender / Consignor (بھیجنے والے)</label><input id="bilSender" list="cltList" placeholder="Sender name or company"></div>
+      <div class="field"><label>Receiver / Consignee (لینے والے)</label><input id="bilReceiver" list="cltList" placeholder="Receiver name or company"></div>
     </div>
     <div class="field-row3">
-      <div class="field"><label>Qty (تعداد)</label><input id="bilQty" type="number" value="1"></div>
+      <div class="field"><label>Qty (تعداد)</label><input id="bilQty" type="number" value="1" min="1"></div>
       <div class="field"><label>Description (تفصیل مال)</label><input id="bilDesc" placeholder="e.g. Wheat bags"></div>
-      <div class="field"><label>Weight (وزن kg)</label><input id="bilWeight" type="number" value="0"></div>
+      <div class="field"><label>Weight kg (وزن)</label><input id="bilWeight" type="number" value="0" min="0"></div>
     </div>
     <div class="field-row3">
-      <div class="field"><label>Total Freight (کل کرایہ)</label><input id="bilFreight" type="number" value="0" oninput="document.getElementById('bilBalance').value = (this.value - document.getElementById('bilAdvance').value)"></div>
-      <div class="field"><label>Advance Paid (ایڈوانس)</label><input id="bilAdvance" type="number" value="0" oninput="document.getElementById('bilBalance').value = (document.getElementById('bilFreight').value - this.value)"></div>
-      <div class="field"><label>Outstanding Balance (بقایا)</label><input id="bilBalance" type="number" value="0" readonly style="background:rgba(255,255,255,0.03);color:#ff9090;font-weight:700"></div>
+      <div class="field">
+        <label>Total Freight Rs (کل کرایہ)</label>
+        <input id="bilFreight" type="number" value="0" min="0"
+          oninput="var b=document.getElementById('bilBalance');var a=document.getElementById('bilAdvance');if(b&&a)b.value=(+this.value)-(+a.value)">
+      </div>
+      <div class="field">
+        <label>Advance Paid Rs (ایڈوانس)</label>
+        <input id="bilAdvance" type="number" value="0" min="0"
+          oninput="var b=document.getElementById('bilBalance');var f=document.getElementById('bilFreight');if(b&&f)b.value=(+f.value)-(+this.value)">
+      </div>
+      <div class="field">
+        <label>Outstanding Balance Rs (بقایا)</label>
+        <input id="bilBalance" type="number" value="0" readonly style="background:rgba(255,138,61,0.08);color:#ffb1b1;font-weight:700;border-color:rgba(255,92,92,0.3)">
+      </div>
     </div>
-  `, `<button class="btn" data-close="bilty">Cancel</button><button class="btn btn-primary" id="saveBilty">Create Bilty</button>`)}
+  `, `<button class="btn" data-close="bilty">Cancel</button><button class="btn btn-primary" id="saveBilty">✅ Create Bilty</button>`)}
 
   <!-- ── CUSTOM CHALLAN MODAL ── -->
   ${modal('modalChallan', m.challan, '📋 New Trip Challan (چالان)', `
+    <datalist id="truckList">${(state.vehicles||[]).map(v=>`<option value="${v.id}">${v.id} — ${v.make||''} ${v.model||''}</option>`).join('')}</datalist>
+    <datalist id="driverList">${(state.staff||[]).filter(x=>x.role==='Driver'||x.role==='driver').map(d=>`<option value="${d.name}">`).join('')}</datalist>
     <div class="field-row">
-      <div class="field"><label>Challan No. (چالان نمبر)</label><input id="chaId" type="text" value="${state.challans.length + 320}"></div>
+      <div class="field"><label>Challan No. (چالان نمبر)</label><input id="chaId" type="text" value="${(state.challans||[]).length + 320}" placeholder="e.g. 320"></div>
       <div class="field"><label>Date (تاریخ)</label><input id="chaDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Vehicle (گاڑی نمبر)</label><select id="chaTruck">${vOpts}</select></div>
-      <div class="field"><label>Driver Name (ڈرائیور نام)</label><select id="chaDriver" onchange="const p=state.staff.find(x=>x.name===this.value); if(p) document.getElementById('chaPhone').value=p.phone||''">${state.staff.filter(x=>x.role==='Driver').map(d=>`<option value="${d.name}">${d.name}</option>`).join('')}</select></div>
+      <div class="field"><label>Vehicle No. (گاڑی نمبر)</label><input id="chaTruck" list="truckList" placeholder="e.g. TRK-0731 or RHM-123"></div>
+      <div class="field"><label>Driver Name (ڈرائیور نام)</label><input id="chaDriver" list="driverList" placeholder="Driver full name"></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Driver Phone (موبائل نمبر)</label><input id="chaPhone" value="${state.staff.filter(x=>x.role==='Driver')[0]?.phone||''}" placeholder="Driver mobile"></div>
-      <div class="field"><label>Driver Freight / Pay (کرایہ ڈرائیور)</label><input id="chaDriverFreight" type="number" value="0"></div>
+      <div class="field"><label>Driver Phone (موبائل نمبر)</label><input id="chaPhone" type="tel" placeholder="e.g. 0300-1234567"></div>
+      <div class="field"><label>Driver Freight / Pay Rs (کرایہ ڈرائیور)</label><input id="chaDriverFreight" type="number" value="0" min="0"></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Sender Location</label><input id="chaSender" value="Karachi Station"></div>
-      <div class="field"><label>Receiver Location</label><input id="chaReceiver" value="Lahore Station"></div>
+      <div class="field"><label>Departure Point (روانگی)</label><input id="chaSender" value="Karachi" placeholder="e.g. Karachi Station"></div>
+      <div class="field"><label>Destination (منزل)</label><input id="chaReceiver" value="Lahore" placeholder="e.g. Lahore Station"></div>
     </div>
     <div class="field" style="margin-top:10px">
-      <label style="font-weight:700;color:var(--accent);margin-bottom:8px">Select Bilties to Load (بلٹیاں لوڈ کریں)</label>
-      <div style="max-height:160px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;padding:8px;background:rgba(0,0,0,0.2)">
-        ${(() => {
-          const linkedBilties = new Set(state.challans.flatMap(c => c.biltyIds || []));
-          const available = state.bilties.filter(b => !linkedBilties.has(b.id));
-          return available.map(b => `
-            <label style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:8px;margin-bottom:4px;cursor:pointer;font-size:.8rem">
-              <input type="checkbox" name="chaBilties" value="${b.id}" style="width:auto">
-              <span><strong>#${b.id}</strong> — ${b.sender} → ${b.receiver} (${b.qty} ${b.description})</span>
+      <label style="font-weight:700;color:var(--accent);margin-bottom:8px;display:block">Load Bilties onto this Challan (بلٹیاں لوڈ کریں)</label>
+      <div style="max-height:180px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;padding:8px;background:rgba(0,0,0,0.2)">
+        ${(()=>{
+          const linked=new Set((state.challans||[]).flatMap(c=>c.biltyIds||[]));
+          const available=(state.bilties||[]).filter(b=>!linked.has(b.id));
+          if(!available.length) return '<div class="muted" style="padding:12px;font-size:.82rem;text-align:center">📭 No unassigned Bilties yet. Create a Bilty first.</div>';
+          return available.map(b=>`
+            <label style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);padding:8px 10px;border-radius:8px;margin-bottom:4px;cursor:pointer;font-size:.82rem;border:1px solid transparent;transition:border-color .15s" onmouseover="this.style.borderColor='rgba(255,138,61,0.3)'" onmouseout="this.style.borderColor='transparent'">
+              <input type="checkbox" name="chaBilties" value="${b.id}" style="width:16px;height:16px;flex-shrink:0;accent-color:#ff8a3d">
+              <span><strong style="color:#ffcfaa">#${b.id}</strong> — ${b.sender||'?'} → ${b.receiver||'?'} &nbsp;|&nbsp; ${b.qty} ${b.description} &nbsp;|&nbsp; <span style="color:var(--good)">Rs.${(+b.freight).toLocaleString()}</span></span>
             </label>
-          `).join('') || '<div class="muted" style="padding:10px;font-size:.8rem;text-align:center">No unassigned Bilties available</div>';
+          `).join('');
         })()}
       </div>
     </div>
-  `, `<button class="btn" data-close="challan">Cancel</button><button class="btn btn-primary" id="saveChallan">Create Challan</button>`)}
+  `, `<button class="btn" data-close="challan">Cancel</button><button class="btn btn-primary" id="saveChallan">✅ Create Challan</button>`)}
   `;
 }
 
@@ -2868,15 +2882,20 @@ function wireModals(){
     const id=$('#bilId').value.trim();
     const sender=$('#bilSender').value.trim();
     const receiver=$('#bilReceiver').value.trim();
-    if(!id||!sender||!receiver)return toast('Bilty No., Sender and Receiver are required','bad');
+    if(!id)return toast('Bilty No. is required','bad');
+    if(!sender)return toast('Sender name is required','bad');
+    if(!receiver)return toast('Receiver name is required','bad');
+    if(state.bilties.find(b=>b.id===id))return toast('Bilty #'+id+' already exists','bad');
     const freight=+$('#bilFreight').value||0;
     const advance=+$('#bilAdvance').value||0;
     const balance=freight-advance;
+    const dest=$('#bilDest').value.trim()||'Lahore';
     const bilty={
       id,
       date:$('#bilDate').value,
       origin:$('#bilOrigin').value.trim()||'Karachi',
-      destination:$('#bilDest').value.trim()||'Lahore',
+      dest,                    // new field name
+      destination:dest,        // keep old field for print template compatibility
       sender,
       receiver,
       qty:+$('#bilQty').value||1,
@@ -2884,37 +2903,47 @@ function wireModals(){
       weight:+$('#bilWeight').value||0,
       freight,
       advance,
-      balance
+      balance,
+      status:'Pending',
+      createdAt:new Date().toISOString()
     };
     state.bilties.unshift(bilty);
     state.modals.bilty=false;
     logActivity('Bilty created','Bilties',`#${id} — ${sender} to ${receiver}`);
-    saveState();toast(`Bilty #${id} created`);render();
+    saveState();toast(`✅ Bilty #${id} created`);render();
   };
 
   // SAVE CHALLAN
   if(m.challan&&$('#saveChallan'))$('#saveChallan').onclick=()=>{
     const id=$('#chaId').value.trim();
-    const truckNo=$('#chaTruck').value;
-    const driverName=$('#chaDriver').value;
+    const truck=$('#chaTruck').value.trim();
+    const driver=$('#chaDriver').value.trim();
     if(!id)return toast('Challan No. is required','bad');
+    if(!truck)return toast('Vehicle No. is required','bad');
+    if(!driver)return toast('Driver name is required','bad');
+    if(state.challans.find(c=>c.id===id))return toast('Challan #'+id+' already exists','bad');
     const biltyIds=[];
     $$('input[name="chaBilties"]:checked').forEach(cb=>biltyIds.push(cb.value));
+    const phone=$('#chaPhone').value.trim();
+    const senderLoc=$('#chaSender').value.trim()||'Karachi';
+    const receiverLoc=$('#chaReceiver').value.trim()||'Lahore';
     const challan={
       id,
       date:$('#chaDate').value,
-      truckNo,
-      driverName,
-      driverPhone:$('#chaPhone').value.trim(),
-      senderName:$('#chaSender').value.trim()||'Karachi Station',
-      receiverName:$('#chaReceiver').value.trim()||'Lahore Station',
+      truck, truckNo:truck,          // both names for compatibility
+      driver, driverName:driver,     // both names for compatibility
+      phone, driverPhone:phone,      // both names for compatibility
+      sender:senderLoc, senderName:senderLoc,
+      receiver:receiverLoc, receiverName:receiverLoc,
       biltyIds,
-      driverFreight:+$('#chaDriverFreight').value||0
+      driverFreight:+$('#chaDriverFreight').value||0,
+      status:'Pending',
+      createdAt:new Date().toISOString()
     };
     state.challans.unshift(challan);
     state.modals.challan=false;
-    logActivity('Trip Challan created','Challans',`#${id} on truck ${truckNo}`);
-    saveState();toast(`Challan #${id} created`);render();
+    logActivity('Trip Challan created','Challans',`#${id} on truck ${truck}`);
+    saveState();toast(`✅ Challan #${id} created${biltyIds.length?' with '+biltyIds.length+' Bilties':''}`);render();
   };
 
   // APPROVE ACTIONS
@@ -3075,6 +3104,7 @@ function wireModals(){
   // OPEN MODAL / SELECT SHIP
   $$('[data-open]').forEach(b=>b.onclick=()=>{state.modals[b.dataset.open]=true;saveState();render()});
   $$('[data-ship]').forEach(b=>b.onclick=()=>{state.selectedShipment=b.dataset.ship;render()});
+
 }
 
 // ══════════════════════════════════════════════════════
