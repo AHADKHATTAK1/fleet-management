@@ -4538,6 +4538,75 @@ if(_ef) _ef.style.display = 'none';
         }
       }
     }, 45000);
+    // ── DRAGGABLE WHATSAPP WIDGET ──
+    var widget = document.getElementById('wa-widget');
+    if (widget) {
+      var isDragging = false;
+      var startX, startY, initialX, initialY;
+      var dragThreshold = 5;
+      var hasMoved = false;
+
+      function onStart(e) {
+        if (e.target.closest('#wa-popup')) return;
+        var clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+        var clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+        
+        isDragging = true;
+        hasMoved = false;
+        startX = clientX;
+        startY = clientY;
+        
+        var style = window.getComputedStyle(widget);
+        initialX = parseInt(style.right) || 24;
+        initialY = parseInt(style.bottom) || 24;
+      }
+
+      function onMove(e) {
+        if (!isDragging) return;
+        var clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+        var clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+        
+        var deltaX = startX - clientX;
+        var deltaY = startY - clientY;
+        
+        if (Math.abs(deltaX) > dragThreshold || Math.abs(deltaY) > dragThreshold) {
+          hasMoved = true;
+        }
+        
+        if (hasMoved) {
+          if (e.cancelable) e.preventDefault();
+          widget.style.cursor = 'grabbing';
+          var newRight = initialX + deltaX;
+          var newBottom = initialY + deltaY;
+          
+          var maxRight = window.innerWidth - widget.offsetWidth - 10;
+          var maxBottom = window.innerHeight - widget.offsetHeight - 10;
+          newRight = Math.max(10, Math.min(newRight, maxRight));
+          newBottom = Math.max(10, Math.min(newBottom, maxBottom));
+          
+          widget.style.right = newRight + 'px';
+          widget.style.bottom = newBottom + 'px';
+        }
+      }
+
+      function onEnd(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        widget.style.cursor = '';
+        if (hasMoved) {
+          e.stopPropagation();
+          e.preventDefault();
+        }
+      }
+
+      widget.addEventListener('mousedown', onStart);
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onEnd);
+
+      widget.addEventListener('touchstart', onStart, { passive: true });
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('touchend', onEnd);
+    }
   })();
 </script>
 </body>
