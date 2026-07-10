@@ -3316,7 +3316,7 @@ function wireModals(){
   });
 
   // OPEN MODAL / SELECT SHIP
-  $$('[data-open]').forEach(b=>b.onclick=()=>{state.modals[b.dataset.open]=true;saveState();render()});
+  $$('[data-open]').forEach(b=>{b._wired=true; b.onclick=()=>{state.modals[b.dataset.open]=true;saveState();render()}});
   $$('[data-ship]').forEach(b=>b.onclick=()=>{state.selectedShipment=b.dataset.ship;render()});
 
 }
@@ -3795,19 +3795,32 @@ function loadDemoData(){
 
 // ══════════════════════════════════════════════════════
 //  GLOBAL FALLBACK: data-open / data-close delegation
+//  This fires for ANY click anywhere on the page.
+//  It ensures modals open even if wireModals failed.
 // ══════════════════════════════════════════════════════
 document.addEventListener('click', function(e) {
+  // Handle data-open (open a modal)
   const opener = e.target.closest('[data-open]');
   if (opener && opener.dataset.open) {
-    state.modals[opener.dataset.open] = true;
-    saveState(); render(); return;
+    // Only act if wireModals did NOT already wire this button
+    if (!opener._wired) {
+      e.stopImmediatePropagation();
+      state.modals[opener.dataset.open] = true;
+      saveState(); render();
+    }
+    return;
   }
+  // Handle data-close (close a modal)
   const closer = e.target.closest('[data-close]');
   if (closer && closer.dataset.close) {
-    state.modals[closer.dataset.close] = false;
-    saveState(); render(); return;
+    if (!closer._wired) {
+      e.stopImmediatePropagation();
+      state.modals[closer.dataset.close] = false;
+      saveState(); render();
+    }
+    return;
   }
-}, true);
+});
 
 // PWA Service Worker Registration
 if ('serviceWorker' in navigator) {
