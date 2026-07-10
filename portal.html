@@ -3380,8 +3380,7 @@ const printBase=`<style>body{font-family:Arial,sans-serif;color:#000;background:
 
 function printInvoice(inv){
   const s=state.settings;
-  const win=window.open('','_blank');
-  win.document.write(`<html><head><title>Invoice ${inv.id}</title>${printBase}</head><body>
+  const htmlStr=`<html><head><title>Invoice ${inv.id}</title>${printBase}</head><body>
   <div class="header">
     <div>
       <h1>${s.companyFull||'Haji Barkat Khan Jadoon Goods Transport'}</h1>
@@ -3404,6 +3403,7 @@ function printInvoice(inv){
   const win=window.open('','_blank');
   if(win){win.document.write(htmlStr);win.document.close();win.focus();setTimeout(()=>win.print(),200);}else{printFallback(htmlStr);}
 }
+
 
 // Staff: print their own latest salary slip
 function printSalarySlipStaff(){
