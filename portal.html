@@ -1675,13 +1675,21 @@ function shipmentsView(){
   const q=state.search.trim().toLowerCase();
   // Staff only see their own shipments; Admin sees all
   const allShips=isAdmin?state.shipments:state.shipments.filter(s=>!person||s.driver===person.name);
-  const filtered=allShips.filter(s=>!q||[s.id,s.client,s.origin,s.dest,s.driver,s.vehicle,s.billNo,s.partyInvoiceNo,s.items,s.emptyPickup,s.loadContainer].some(v=>(v||'').toLowerCase().includes(q)));
+  const cityFiltered=state.cityFilter ? allShips.filter(s=>[s.origin,s.dest,s.loadContainer,s.emptyPickup].some(v=>(v||'').toLowerCase().includes(state.cityFilter.toLowerCase()))) : allShips;
+  const filtered=cityFiltered.filter(s=>!q||[s.id,s.client,s.origin,s.dest,s.driver,s.vehicle,s.billNo,s.partyInvoiceNo,s.items,s.emptyPickup,s.loadContainer].some(v=>(v||'').toLowerCase().includes(q)));
   const selected=filtered.find(s=>s.id===state.selectedShipment)||filtered[0];
   if(!filtered.length)return `<div class="panel"><div class="section-head"><div class="section-label">Shipments</div>${isAdmin?'<button class="btn btn-primary" data-open="shipment">+ New shipment</button>':''}</div><div class="empty-state"><span class="icon">🚚</span><p>${isAdmin?'No shipments yet':'No shipments assigned to you yet'}</p></div></div>`;
   const sm=STATUS_META[selected?.status]||STATUS_META.pending;
   return `
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
-    <div class="muted" style="font-size:.82rem">${isAdmin?`Showing all ${filtered.length} shipments`:`Showing your ${filtered.length} assigned trip(s)`}</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="muted" style="font-size:.82rem">${isAdmin?`Showing ${filtered.length} shipments`:`Showing your ${filtered.length} assigned trip(s)`}</div>
+      <div style="display:flex;gap:4px;background:rgba(255,255,255,0.05);padding:4px;border-radius:8px">
+        <button class="btn btn-sm ${!state.cityFilter?'btn-primary':''}" style="padding:4px 10px;font-size:0.75rem" onclick="toggleCityFilter(null)">All</button>
+        <button class="btn btn-sm ${state.cityFilter==='Karachi'?'btn-primary':''}" style="padding:4px 10px;font-size:0.75rem" onclick="toggleCityFilter('Karachi')">Karachi</button>
+        <button class="btn btn-sm ${state.cityFilter==='Lahore'?'btn-primary':''}" style="padding:4px 10px;font-size:0.75rem" onclick="toggleCityFilter('Lahore')">Lahore</button>
+      </div>
+    </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       ${isAdmin?'<button class="btn btn-primary" data-open="shipment">+ New shipment</button>':''}
     </div>
@@ -1900,7 +1908,8 @@ function invoicesView(){
 
 function biltiesView(){
   const q=state.search.trim().toLowerCase();
-  const filtered=state.bilties.filter(b=>!q||[b.id,b.sender,b.receiver,b.origin,b.dest,b.destination,b.description].some(v=>(v||'').toLowerCase().includes(q)));
+  const cityFiltered=state.cityFilter ? state.bilties.filter(b=>[b.origin,b.dest,b.destination,b.sender,b.receiver].some(v=>(v||'').toLowerCase().includes(state.cityFilter.toLowerCase()))) : state.bilties;
+  const filtered=cityFiltered.filter(b=>!q||[b.id,b.sender,b.receiver,b.origin,b.dest,b.destination,b.description].some(v=>(v||'').toLowerCase().includes(q)));
   const totalBiltys=state.bilties.length;
   const totalWeight=state.bilties.reduce((a,b)=>a+(+b.weight||0),0);
   const totalBalance=state.bilties.reduce((a,b)=>a+(+b.balance||0),0);
@@ -1911,8 +1920,15 @@ function biltiesView(){
     ${kpi(money(totalBalance),'Total Outstanding Balance','#ff5c5c','⏳')}
   </div>
   <div class="panel">
-    <div class="section-head">
-      <div class="section-label">Goods Receipts (Bilties) — ${totalBiltys} total</div>
+    <div class="section-head" style="align-items:center">
+      <div style="display:flex;align-items:center;gap:15px">
+        <div class="section-label" style="margin:0">Goods Receipts (Bilties) — ${filtered.length} shown</div>
+        <div style="display:flex;gap:4px;background:rgba(255,255,255,0.05);padding:4px;border-radius:8px">
+          <button class="btn btn-sm ${!state.cityFilter?'btn-primary':''}" style="padding:4px 10px;font-size:0.75rem" onclick="toggleCityFilter(null)">All</button>
+          <button class="btn btn-sm ${state.cityFilter==='Karachi'?'btn-primary':''}" style="padding:4px 10px;font-size:0.75rem" onclick="toggleCityFilter('Karachi')">Karachi</button>
+          <button class="btn btn-sm ${state.cityFilter==='Lahore'?'btn-primary':''}" style="padding:4px 10px;font-size:0.75rem" onclick="toggleCityFilter('Lahore')">Lahore</button>
+        </div>
+      </div>
       <button class="btn btn-primary" data-open="bilty">+ New Bilty (بلٹی)</button>
     </div>
     <table class="table">
@@ -1958,7 +1974,8 @@ function biltiesView(){
 
 function challansView(){
   const q=state.search.trim().toLowerCase();
-  const filtered=state.challans.filter(c=>!q||[c.id,c.truck||c.truckNo,c.driver||c.driverName].some(v=>(v||'').toLowerCase().includes(q)));
+  const cityFiltered=state.cityFilter ? state.challans.filter(c=>[c.sender,c.senderName,c.receiver,c.receiverName,c.route].some(v=>(v||'').toLowerCase().includes(state.cityFilter.toLowerCase()))) : state.challans;
+  const filtered=cityFiltered.filter(c=>!q||[c.id,c.truck||c.truckNo,c.driver||c.driverName].some(v=>(v||'').toLowerCase().includes(q)));
   const totalTrips=state.challans.length;
   const activeTrucks=new Set(state.challans.map(c=>c.truck||c.truckNo)).size;
   const totalDispatched=state.challans.reduce((a,b)=>a+(+b.driverFreight||0),0);
@@ -1969,8 +1986,15 @@ function challansView(){
     ${kpi(money(totalDispatched),'Driver Paid Freight','#58a6ff','💸')}
   </div>
   <div class="panel">
-    <div class="section-head">
-      <div class="section-label">Loading Sheets &amp; Trip Challans — ${totalTrips} total</div>
+    <div class="section-head" style="align-items:center">
+      <div style="display:flex;align-items:center;gap:15px">
+        <div class="section-label" style="margin:0">Loading Sheets &amp; Trip Challans — ${filtered.length} shown</div>
+        <div style="display:flex;gap:4px;background:rgba(255,255,255,0.05);padding:4px;border-radius:8px">
+          <button class="btn btn-sm ${!state.cityFilter?'btn-primary':''}" style="padding:4px 10px;font-size:0.75rem" onclick="toggleCityFilter(null)">All</button>
+          <button class="btn btn-sm ${state.cityFilter==='Karachi'?'btn-primary':''}" style="padding:4px 10px;font-size:0.75rem" onclick="toggleCityFilter('Karachi')">Karachi</button>
+          <button class="btn btn-sm ${state.cityFilter==='Lahore'?'btn-primary':''}" style="padding:4px 10px;font-size:0.75rem" onclick="toggleCityFilter('Lahore')">Lahore</button>
+        </div>
+      </div>
       <button class="btn btn-primary" data-open="challan">+ New Challan (چالان)</button>
     </div>
     <table class="table">
