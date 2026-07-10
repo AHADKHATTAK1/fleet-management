@@ -741,6 +741,16 @@ a{color:var(--accent);text-decoration:none}
 </div>
 
 <script>
+window.onerror = function(msg, url, line) {
+  const txt = `⚠️ System Error: ${msg} (Line ${line})`;
+  console.error(txt, url, line);
+  if (typeof toast === 'function') {
+    toast(txt, 'bad');
+  } else {
+    alert(txt);
+  }
+};
+
 // ══════════════════════════════════════════════════════
 //  STATE & PERSISTENCE
 // ══════════════════════════════════════════════════════
@@ -859,17 +869,17 @@ const state={
   modals:{}, activeWarehouse:null,
   ...(saved||SEED),
 };
-if(!saved){
-  ['shipments','stock','receiving','receivingLines','transactions','staff','salaries',
-   'vehicles','fuelLogs','maintenance','clients','stockMovements','invoices','attendance',
-   'bilties','challans','activityLog','settings'].forEach(k=>{if(SEED[k])state[k]=JSON.parse(JSON.stringify(SEED[k]));});
-}
-if(!state.settings)state.settings=JSON.parse(JSON.stringify(SEED.settings));
-if(!state.invoices)state.invoices=JSON.parse(JSON.stringify(SEED.invoices));
+// Always migrate and ensure all database collections from SEED are present in state
+['shipments','stock','receiving','receivingLines','transactions','staff','salaries',
+ 'vehicles','fuelLogs','maintenance','clients','stockMovements','invoices','attendance',
+ 'bilties','challans','activityLog','settings'].forEach(k => {
+  if (state[k] === undefined || state[k] === null) {
+    state[k] = JSON.parse(JSON.stringify(SEED[k]));
+  }
+});
 if(!state.attendance)state.attendance=[];
-if(!state.bilties)state.bilties=JSON.parse(JSON.stringify(SEED.bilties));
-if(!state.challans)state.challans=JSON.parse(JSON.stringify(SEED.challans));
-if(!state.activityLog)state.activityLog=JSON.parse(JSON.stringify(SEED.activityLog));
+if(!state.bilties)state.bilties=[];
+if(!state.challans)state.challans=[];
 
 // ══════════════════════════════════════════════════════
 //  UTILS
@@ -2614,9 +2624,9 @@ function guideView(){
 // ══════════════════════════════════════════════════════
 function buildModalHTML(){
   const m=state.modals;
-  const vOpts=state.vehicles.map(v=>`<option value="${v.id}">${v.id} — ${v.make} ${v.model}</option>`).join('');
-  const stOpts=state.staff.map(s=>`<option value="${s.id}">${s.name} (${s.role})</option>`).join('');
-  const skOpts=state.stock.map(s=>`<option value="${s.sku}">${s.sku} — ${s.item}</option>`).join('');
+  const vOpts=(state.vehicles||[]).map(v=>`<option value="${v.id}">${v.id} — ${v.make||''} ${v.model||''}</option>`).join('');
+  const stOpts=(state.staff||[]).map(s=>`<option value="${s.id}">${s.name||''} (${s.role||''})</option>`).join('');
+  const skOpts=(state.stock||[]).map(s=>`<option value="${s.sku}">${s.sku} — ${s.item||''}</option>`).join('');
   const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
   const yr=new Date().getFullYear();
 
