@@ -4225,11 +4225,27 @@ function getLocalAIResponse(q) {
 
 function render(sv=true){
   if(sv)saveState();
-  renderContent();
+  try { renderContent(); } catch(e) {
+    console.error('renderContent error:', e);
+    const c = document.getElementById('content') || document.getElementById('app');
+    if(c) c.innerHTML = '<div style="color:#ff5c5c;padding:2rem;font-family:monospace;font-size:0.9rem;background:#0a0f1c;min-height:100vh"><h2 style="color:#ff8a3d">⚠️ App Error</h2><pre style="white-space:pre-wrap;word-break:break-all">' + e.toString() + '</pre></div>';
+  }
   setTimeout(renderCharts,80);
 }
 
-render();
+// Global error handler — catches syntax/runtime errors before render
+window.onerror = function(msg, src, line, col, err) {
+  document.body.innerHTML = '<div style="color:#ff7070;padding:2rem;font-family:monospace;font-size:0.85rem;background:#07111f;min-height:100vh;position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;overflow:auto">' +
+    '<h2 style="color:#ff8a3d;margin-bottom:1rem">⚠️ JavaScript Error — App Could Not Load</h2>' +
+    '<div style="margin-bottom:0.5rem"><strong>Error:</strong> ' + msg + '</div>' +
+    '<div style="margin-bottom:0.5rem"><strong>Line:</strong> ' + line + ' Col: ' + col + '</div>' +
+    '<div style="margin-bottom:1rem"><strong>File:</strong> ' + src + '</div>' +
+    '<div style="color:#ffbe3d">Please send this info to your developer.</div>' +
+    '</div>';
+  return false;
+};
+
+try { render(); } catch(e) { console.error('Top-level render failed:', e); }
 </script>
 <!-- ═══════════════════════════════════════════
      PROFESSIONAL WHATSAPP CHAT WIDGET
