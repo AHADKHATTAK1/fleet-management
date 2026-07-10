@@ -753,7 +753,7 @@ window.onerror = function(msg, url, line) {
 
 // Automatic PWA Cache Storage Purge to force latest files
 (function(){
-  const CURRENT_VER = 'hbk-fleet-v19';
+  const CURRENT_VER = 'hbk-fleet-v20';
   if (localStorage.getItem('portal_pwa_ver') !== CURRENT_VER) {
     localStorage.setItem('portal_pwa_ver', CURRENT_VER);
     if ('caches' in window) {
@@ -900,6 +900,12 @@ if(!state.challans)state.challans=[];
  'bilties','challans','activityLog'].forEach(k => {
   if (Array.isArray(state[k])) {
     state[k] = state[k].filter(Boolean);
+  }
+});
+// Ensure all transactions have status field populated
+(state.transactions||[]).forEach(t => {
+  if (t && t.status === undefined) {
+    t.status = 'approved';
   }
 });
 
@@ -2337,8 +2343,8 @@ function receivingView(){
 
 function paymentsView(){
   const isAdmin=state.role==='Admin';
-  const income=state.transactions.filter(t=>t.type==='income').reduce((a,b)=>a+b.amount,0);
-  const expense=state.transactions.filter(t=>t.type==='expense').reduce((a,b)=>a+b.amount,0);
+  const income=state.transactions.filter(t=>t.type==='income'&&t.status==='approved').reduce((a,b)=>a+b.amount,0);
+  const expense=state.transactions.filter(t=>t.type==='expense'&&t.status==='approved').reduce((a,b)=>a+b.amount,0);
   const q=state.search.trim().toLowerCase();
   // Staff only see expenses (not income/financial totals)
   const visible=(isAdmin?state.transactions:state.transactions.filter(t=>t.type==='expense')).filter(t=>!q||[t.id,t.desc,t.category].some(v=>(v||'').toLowerCase().includes(q)));
@@ -2354,22 +2360,34 @@ function paymentsView(){
     </div>
   </div>`:''}
   <div class="panel"><div class="section-head"><div class="section-label">${isAdmin?'All transactions':'Expense records'} — ${visible.length} entries</div><button class="btn btn-primary" data-open="payment">+ ${isAdmin?'New entry':'Submit expense'}</button></div>
-  <table class="table"><thead><tr><th>ID</th><th>Description</th><th>Category</th><th>Date</th><th>Amount</th>${isAdmin?'<th>Type</th>':''}<th>${isAdmin?'Del':''}</th></tr></thead>
-  <tbody>${visible.map((t,i)=>`<tr>
-    <td class="mono" style="font-size:.75rem;color:var(--muted)">${t.id}</td>
-    <td style="font-weight:600">${t.desc}</td>
-    <td><span style="background:rgba(255,255,255,.05);color:var(--muted);padding:.18rem .5rem;border-radius:6px;font-size:.74rem">${t.category}</span></td>
-    <td class="muted">${t.date}</td>
-    <td style="font-weight:800;color:${t.type==='income'?'var(--good)':'#ffb1b1'}">${t.type==='income'?'+':'-'}${money(t.amount)}</td>
-    ${isAdmin?`<td>${badge(t.type==='income'?'active':'suspended')}</td>`:''}
-    <td>${isAdmin?`<button class="icon-btn btn-danger" data-del-txn="${t.id}">🗑</button>`:''}</td>
-  </tr>`).join('')}</tbody></table></div>`;
+  <table class="table"><thead><tr><th>ID</th><th>Description</th><th>Category</th><th>Date</th><th>Amount</th><th>Status / Type</th><th>Actions</th></tr></thead>
+  <tbody>${visible.map((t,i)=>{
+    const isPending=t.status==='pending';
+    const typeBadge=isPending?`<span class="badge" style="color:#ff8a3d;background:rgba(255,138,61,.15)"><span class="status-dot dot-transit"></span>Pending</span>`:badge(t.type==='income'?'active':'suspended');
+    return `<tr>
+      <td class="mono" style="font-size:.75rem;color:var(--muted)">${t.id}</td>
+      <td>
+        <div style="font-weight:600">${t.desc}</div>
+        ${t.submittedBy?`<div class="muted mono" style="font-size:.72rem">Submitted by: ${t.submittedBy}</div>`:''}
+      </td>
+      <td><span style="background:rgba(255,255,255,.05);color:var(--muted);padding:.18rem .5rem;border-radius:6px;font-size:.74rem">${t.category}</span></td>
+      <td class="muted">${t.date}</td>
+      <td style="font-weight:800;color:${t.type==='income'?'var(--good)':'#ffb1b1'}">${t.type==='income'?'+':'-'}${money(t.amount)}</td>
+      <td>${typeBadge}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          ${isAdmin&&isPending?`<button class="btn btn-sm btn-success" data-approve-txn="${t.id}">✓ Approve</button>`:''}
+          ${isAdmin?`<button class="icon-btn btn-danger" data-del-txn="${t.id}">🗑</button>`:''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
 }
 
 function reportsView(){
   const isAdmin=state.role==='Admin';
-  const income=state.transactions.filter(t=>t.type==='income').reduce((a,b)=>a+b.amount,0);
-  const expense=state.transactions.filter(t=>t.type==='expense').reduce((a,b)=>a+b.amount,0);
+  const income=state.transactions.filter(t=>t.type==='income'&&t.status==='approved').reduce((a,b)=>a+b.amount,0);
+  const expense=state.transactions.filter(t=>t.type==='expense'&&t.status==='approved').reduce((a,b)=>a+b.amount,0);
   const net=income-expense;
   const totalSalary=state.salaries.reduce((a,b)=>a+b.total,0);
   const paidSalary=state.salaries.filter(s=>s.status==='paid').reduce((a,b)=>a+b.total,0);
@@ -2992,8 +3010,24 @@ function wireModals(){
   if(m.payment&&$('#savePayment'))$('#savePayment').onclick=()=>{
     const desc=$('#payDesc').value.trim();if(!desc)return toast('Description required','bad');
     const id=`TXN-${pad(state.transactions.length+9010)}`;
-    state.transactions.unshift({id,type:state.role==='Admin'?($('#payType')?$('#payType').value:'expense'):'expense',desc,date:shortDate(),amount:+$('#payAmt').value||0,category:$('#payCat').value.trim()||'General',month:new Date().toLocaleString('default',{month:'short'}),year:new Date().getFullYear()});
-    state.modals.payment=false;logActivity('Transaction logged','Payments',desc);saveState();toast(state.role==='Admin'?`${id} recorded`:'Expense submitted');render();
+    const isStaff=state.role!=='Admin';
+    state.transactions.unshift({
+      id,
+      type:state.role==='Admin'?($('#payType')?$('#payType').value:'expense'):'expense',
+      desc,
+      date:shortDate(),
+      amount:+$('#payAmt').value||0,
+      category:$('#payCat').value.trim()||'General',
+      month:new Date().toLocaleString('default',{month:'short'}),
+      year:new Date().getFullYear(),
+      status:isStaff?'pending':'approved',
+      submittedBy:isStaff?state.email:''
+    });
+    state.modals.payment=false;
+    logActivity(isStaff?'Expense submitted':'Transaction logged','Payments',desc);
+    saveState();
+    toast(isStaff?'✅ Expense submitted for Admin approval':`✅ Transaction ${id} recorded`);
+    render();
   };
 
   // SAVE BILTY
@@ -3069,6 +3103,12 @@ function wireModals(){
   $$('[data-approve-ship]').forEach(b=>b.onclick=()=>{const s=state.shipments.find(x=>x.id===b.dataset.approveShip);if(!s)return;s.status='delivered';s.progress=1;logActivity('Shipment delivered','Shipments',s.id);saveState();toast(`${s.id} delivered`);render()});
   $$('[data-approve-receiving]').forEach(b=>b.onclick=()=>{const slip=state.receiving.find(r=>r.id===b.dataset.approveReceiving);if(!slip)return;(state.receivingLines[slip.id]||[]).forEach(l=>{const si=state.stock.find(s=>s.item===l.name);if(si)si.qty=(si.qty||0)+(l.received||0);});slip.approval='approved';slip.status='received';logActivity('Receiving approved','Receiving',slip.id);saveState();toast(`${slip.id} approved`);render()});
   $$('[data-approve-movement]').forEach(b=>b.onclick=()=>{const mv=state.stockMovements.find(m=>m.id===b.dataset.approveMovement);if(!mv)return;const si=state.stock.find(s=>s.sku===mv.sku);if(si){if(mv.type==='in')si.qty=(si.qty||0)+(mv.qty||0);else si.qty=Math.max(0,(si.qty||0)-(mv.qty||0));}mv.status='approved';saveState();toast(`${mv.id} approved`);render()});
+  $$('[data-approve-txn]').forEach(b=>b.onclick=()=>{
+    const txn=state.transactions.find(x=>x.id===b.dataset.approveTxn);if(!txn)return;
+    txn.status='approved';
+    logActivity('Expense approved','Payments',`${txn.id} — ${txn.desc}`);
+    saveState();toast('✅ Expense approved and logged');render();
+  });
 
   // PAY SALARY
   $$('[data-pay-salary]').forEach(b=>b.onclick=()=>{
