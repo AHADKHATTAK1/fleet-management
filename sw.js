@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hbk-fleet-v18';
+const CACHE_NAME = 'hbk-fleet-v19';
 const ASSETS = [
   './index.html',
   './portal.html',
