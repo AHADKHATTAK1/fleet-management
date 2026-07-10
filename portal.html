@@ -753,7 +753,7 @@ window.onerror = function(msg, url, line) {
 
 // Automatic PWA Cache Storage Purge to force latest files
 (function(){
-  const CURRENT_VER = 'hbk-fleet-v14';
+  const CURRENT_VER = 'hbk-fleet-v15';
   if (localStorage.getItem('portal_pwa_ver') !== CURRENT_VER) {
     localStorage.setItem('portal_pwa_ver', CURRENT_VER);
     if ('caches' in window) {
@@ -1348,6 +1348,8 @@ function dashboardView(){
     if(s.status==='delivered')driverStats[s.driver].delivered++;
     if(s.status==='delayed')driverStats[s.driver].delayed++;
   });
+  const totalBilties=state.bilties.length;
+  const totalChallans=state.challans.length;
   const recentActivity=(state.activityLog||[]).slice(0,6);
 
   return `
@@ -1482,11 +1484,15 @@ function dashboardView(){
     </div>
   </div>
 
-  <div class="grid4">
+  <div class="grid3">
     ${kpi(`<span class="kpi-animate" data-target="${activeShips}">${activeShips}</span>`,'Active shipments','#ff8a3d','🚚','In motion')}
     ${kpi(`<span class="kpi-animate" data-target="${Math.round(income/1000)}">Rs ${Math.round(income/1000)}K</span>`,'Total income','#3ddc97','💵','+'+state.transactions.filter(t=>t.type==='income'&&t.month==='Jun').length+' this month')}
     ${kpi(`<span class="kpi-animate" data-target="${lowStock}">${lowStock}</span>`,'Low stock alerts','#ff5c5c','⚠️',lowStock?'Needs reorder':'All good')}
+  </div>
+  <div class="grid3">
     ${kpi(`<span class="kpi-animate" data-target="${Math.round(unpaidSal/1000)}">Rs ${Math.round(unpaidSal/1000)}K</span>`,'Salary outstanding','#ffbe3d','💰',state.salaries.filter(s=>s.status==='unpaid').length+' unpaid')}
+    ${kpi(`<span class="kpi-animate" data-target="${totalBilties}">${totalBilties}</span>`,'Total Bilties (بلٹی)','#ff8a3d','📜',totalBilties+' goods receipt(s)')}
+    ${kpi(`<span class="kpi-animate" data-target="${totalChallans}">${totalChallans}</span>`,'Total Challans (چالان)','#ffbe3d','📋',totalChallans+' loading sheet(s)')}
   </div>
   <div class="grid2" style="margin-bottom:14px">
     <div class="panel"><div class="section-head"><div class="section-label">📈 Income vs Expenses (Monthly)</div></div><div class="chart-wrap"><canvas id="chart-revenue"></canvas></div></div>
@@ -3102,11 +3108,11 @@ function wireModals(){
 
   // PRINT BILTY & CHALLAN
   $$('[data-print-bilty]').forEach(b=>b.onclick=()=>{
-    const bil=state.bilties.find(x=>x.id===b.dataset.printBilty);
+    const bil=state.bilties.find(x=>String(x.id)===String(b.dataset.printBilty));
     if(bil)printBilty(bil);
   });
   $$('[data-print-challan]').forEach(b=>b.onclick=()=>{
-    const cha=state.challans.find(x=>x.id===b.dataset.printChallan);
+    const cha=state.challans.find(x=>String(x.id)===String(b.dataset.printChallan));
     if(cha)printChallan(cha);
   });
 
@@ -3447,7 +3453,7 @@ function printBilty(bilty){
 function printChallan(challan){
   const win=window.open('','_blank');
   if(!win) { toast('⚠️ Please allow popups to print Challan', 'warn'); return; }
-  const loadedBilties = (challan.biltyIds||[]).map(bid => state.bilties.find(b=>b.id===bid)).filter(Boolean);
+  const loadedBilties = (challan.biltyIds||[]).map(bid => state.bilties.find(b=>String(b.id)===String(bid))).filter(Boolean);
   const totalQty = loadedBilties.reduce((a,b)=>a+(+b.qty||0),0);
   const totalWeight = loadedBilties.reduce((a,b)=>a+(+b.weight||0),0);
   const totalFreight = loadedBilties.reduce((a,b)=>a+(+b.freight||0),0);
