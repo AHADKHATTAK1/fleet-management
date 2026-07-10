@@ -742,14 +742,25 @@ function trackCargo() {
     return;
   }
   
+  // Support both status keys used by this project:
+  // - React/portal: in_transit / delayed / delivered / scheduled
+  // - Streamlit: in transit / delayed / delivered / scheduled
+  const normalizeStatus = (st) => {
+    if (!st) return st;
+    return st === 'in transit' ? 'in_transit' : st;
+  };
+
   const statusMeta = {
     scheduled: ['Scheduled', '#8B93A7', 'rgba(139,147,167,.13)'],
     in_transit: ['In Transit', '#FF8A3D', 'rgba(255,138,61,.13)'],
     delayed: ['Delayed', '#FF5C5C', 'rgba(255,92,92,.13)'],
     delivered: ['Delivered', '#3DDC97', 'rgba(61,220,151,.13)']
   };
-  const meta = statusMeta[ship.status] || ['Active', '#3ddc97', 'rgba(61,220,151,.13)'];
-  const pct = Math.round(ship.progress * 100);
+
+  const normalizedStatus = normalizeStatus(ship.status);
+  const meta = statusMeta[normalizedStatus] || ['Active', '#3ddc97', 'rgba(61,220,151,.13)'];
+  const pct = Math.round((Number(ship.progress) || 0) * 100);
+
   
   result.innerHTML = `
     <div style="background:rgba(255,255,255,.01);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:1.1rem;margin-top:12px;display:grid;gap:12px;text-align:left">
