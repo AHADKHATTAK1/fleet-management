@@ -1349,6 +1349,12 @@ window.toggleWarehouse=function(wh){
   render(false);
 };
 
+window.toggleCityFilter=function(city){
+  state.cityFilter = city;
+  saveState();
+  render();
+};
+
 // ══════════════════════════════════════════════════════
 //  VIEWS
 // ══════════════════════════════════════════════════════
@@ -3699,11 +3705,10 @@ function printChallan(challan){
 }
 
 function printReport(){
-  const win=window.open('','_blank');
   const income=state.transactions.filter(t=>t.type==='income').reduce((a,b)=>a+b.amount,0);
   const expense=state.transactions.filter(t=>t.type==='expense').reduce((a,b)=>a+b.amount,0);
   const s=state.settings;
-  win.document.write(`<html><head><title>Fleet Report</title>${printBase}</head><body>
+  const htmlStr = `<html><head><title>Fleet Report</title>${printBase}</head><body>
   <div class="header">
     <div><h1>${s.companyFull||'Haji Barkat Khan Jadoon Goods Transport'}</h1><div class="sub">Fleet Management Report</div></div>
     <div style="text-align:right"><div class="sub">Generated: ${new Date().toLocaleString()}</div></div>
