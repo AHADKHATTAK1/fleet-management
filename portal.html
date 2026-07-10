@@ -702,6 +702,7 @@ a{color:var(--accent);text-decoration:none}
         </div>
       </div>
     </div>
+    <div id="warehouseTogglesPanel"></div>
     <section id="content"></section>
   </main>
   <nav class="mobile-nav-bar" id="mobileNavBar"></nav>
@@ -854,7 +855,7 @@ const saved=loadState();
 const state={
   authenticated:false,role:'Admin',email:'',displayName:'',
   section:'Dashboard',search:'',selectedShipment:'WB-48213',selectedReceiving:'GRN-3081',
-  modals:{},
+  modals:{}, activeWarehouse:null,
   ...(saved||SEED),
 };
 if(!saved){
@@ -1223,6 +1224,81 @@ function topView(){
   $('#search').value=state.search;
   $('#search').oninput=e=>{state.search=e.target.value;render(false)};
 }
+
+function renderWarehouseToggles(){
+  const panel=$('#warehouseTogglesPanel');
+  if(!panel)return;
+  if(!state.authenticated || ['Settings','Guide','Activity Log'].includes(state.section)){
+    panel.innerHTML='';
+    return;
+  }
+
+  const kItems=(state.stock||[]).filter(s=>(s.warehouse||'').toLowerCase().includes('karachi'));
+  const lItems=(state.stock||[]).filter(s=>(s.warehouse||'').toLowerCase().includes('lahore'));
+  const active=state.activeWarehouse;
+
+  let html=`
+  <div style="display:flex;gap:10px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
+    <button class="btn" style="display:flex;align-items:center;gap:6px;font-size:0.78rem;padding:6px 12px;border-radius:8px;font-weight:700;border:1px solid ${active==='Karachi'?'var(--accent)':'rgba(255,255,255,0.08)'};background:${active==='Karachi'?'rgba(255,138,61,0.15)':'rgba(255,255,255,0.02)'};color:${active==='Karachi'?'var(--accent)':'#fff'};transition:all 0.2s" onclick="toggleWarehouse('Karachi')">
+      🏢 Karachi Warehouse <span style="background:${active==='Karachi'?'var(--accent)':'rgba(255,255,255,0.08)'};color:${active==='Karachi'?'#000':'var(--muted)'};padding:1px 5px;border-radius:5px;font-size:0.68rem">${kItems.length}</span>
+    </button>
+    <button class="btn" style="display:flex;align-items:center;gap:6px;font-size:0.78rem;padding:6px 12px;border-radius:8px;font-weight:700;border:1px solid ${active==='Lahore'?'var(--accent)':'rgba(255,255,255,0.08)'};background:${active==='Lahore'?'rgba(255,138,61,0.15)':'rgba(255,255,255,0.02)'};color:${active==='Lahore'?'var(--accent)':'#fff'};transition:all 0.2s" onclick="toggleWarehouse('Lahore')">
+      🏢 Lahore Warehouse <span style="background:${active==='Lahore'?'var(--accent)':'rgba(255,255,255,0.08)'};color:${active==='Lahore'?'#000':'var(--muted)'};padding:1px 5px;border-radius:5px;font-size:0.68rem">${lItems.length}</span>
+    </button>
+  </div>
+  `;
+
+  if(active){
+    const list=active==='Karachi'?kItems:lItems;
+    html+=`
+    <div class="panel" style="animation:slideDown 0.2s ease-out;margin-bottom:14px;border:1px solid rgba(255,138,61,0.2);background:rgba(255,138,61,0.02)">
+      <div class="section-head" style="margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.05)">
+        <div class="section-label" style="color:var(--accent);font-size:0.86rem;font-weight:800;display:flex;align-items:center;gap:6px">📦 Stock in ${active} Warehouse</div>
+        <button class="icon-btn" onclick="toggleWarehouse(null)" style="font-size:0.8rem;color:var(--muted)">✕ Close</button>
+      </div>
+      ${list.length?`
+      <div style="overflow-x:auto">
+        <table class="table" style="width:100%;font-size:0.8rem">
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:6px">SKU</th>
+              <th style="text-align:left;padding:6px">Item</th>
+              <th style="text-align:left;padding:6px">Storage Location</th>
+              <th style="text-align:right;padding:6px">Qty Available</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${list.map(s=>{
+              const isLow=s.qty<s.reorder;
+              return `
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.02)">
+                <td class="mono" style="color:#ffcfaa;font-weight:700;padding:6px">${s.sku}</td>
+                <td style="font-weight:600;padding:6px">${s.item}</td>
+                <td style="color:var(--muted);padding:6px">${s.warehouse}</td>
+                <td class="mono" style="text-align:right;font-weight:700;color:${isLow?'#ff5c5c':'var(--good)'};padding:6px">
+                  ${s.qty} ${s.unit||'pcs'}
+                  ${isLow?'<span style="font-size:0.65rem;color:#ff5c5c;margin-left:4px">⚠️ LOW</span>':''}
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+      `:`<div class="muted" style="text-align:center;padding:12px;font-size:0.78rem">No inventory items located in this warehouse.</div>`}
+    </div>`;
+  }
+  panel.innerHTML=html;
+}
+
+window.toggleWarehouse=function(wh){
+  if(state.activeWarehouse===wh){
+    state.activeWarehouse=null;
+  }else{
+    state.activeWarehouse=wh;
+  }
+  saveState();
+  render(false);
+};
 
 // ══════════════════════════════════════════════════════
 //  VIEWS
@@ -3710,7 +3786,7 @@ function renderContent(){
   if(widget) widget.style.display = 'block';
   $('#login').classList.add('hidden');
   $('#app').classList.remove('hidden');
-  navView();topView();
+  navView();topView();renderWarehouseToggles();
 
   const views={
     Dashboard:dashboardView,Shipments:shipmentsView,Optimizer:optimizerView,
