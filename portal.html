@@ -5,6 +5,19 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,viewport-fit=cover"/>
 <title>HBK Jadoon — Advanced Fleet Management System</title>
 <meta name="description" content="Haji Barkat Khan Jadoon Goods Transport — advanced fleet, salary, invoices, attendance, analytics & finance portal."/>
+<script>
+// Force unregister service workers and clear cache to bypass old cached code
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    for(let r of regs) r.unregister();
+  });
+}
+if ('caches' in window) {
+  caches.keys().then(keys => {
+    for(let k of keys) caches.delete(k);
+  });
+}
+</script>
 <!-- PWA Integration -->
 <link rel="manifest" href="manifest.json"/>
 <meta name="theme-color" content="#07111f"/>
@@ -920,6 +933,7 @@ if(!state.challans)state.challans=[];
     t.status = 'approved';
   }
 });
+
 
 // ══════════════════════════════════════════════════════
 //  UTILS
@@ -3590,13 +3604,18 @@ function printBilty(bilty){
         <strong>لاہور آفس:</strong> شیکھوپورہ روڈ پرانا ٹول پلازہ / سگیاں راوی روڈ لاہور | <strong>فون:</strong> 042-7339727 / 0301-4977921
       </div>
     </div>
-  </body>
-  </html>
-  `);
-  win.document.close();
-  win.focus();
-  setTimeout(()=>win.print(),500);
+  `;
+  const win=window.open('','_blank');
+  if(win){
+    win.document.write(htmlStr);
+    win.document.close();
+    win.focus();
+    setTimeout(()=>win.print(),200);
+  }else{
+    printFallback(htmlStr);
+  }
 }
+
 
 function printChallan(challan){
   const loadedBilties = (challan.biltyIds||[]).map(bid => state.bilties.find(b=>String(b.id)===String(bid))).filter(Boolean);
