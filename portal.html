@@ -753,7 +753,7 @@ window.onerror = function(msg, url, line) {
 
 // Automatic PWA Cache Storage Purge to force latest files
 (function(){
-  const CURRENT_VER = 'hbk-fleet-v16';
+  const CURRENT_VER = 'hbk-fleet-v17';
   if (localStorage.getItem('portal_pwa_ver') !== CURRENT_VER) {
     localStorage.setItem('portal_pwa_ver', CURRENT_VER);
     if ('caches' in window) {
@@ -894,6 +894,14 @@ const state={
 if(!state.attendance)state.attendance=[];
 if(!state.bilties)state.bilties=[];
 if(!state.challans)state.challans=[];
+// Clean any null/undefined entries in state collections to prevent mapping crashes
+['shipments','stock','receiving','transactions','staff','salaries',
+ 'vehicles','fuelLogs','maintenance','clients','stockMovements','invoices','attendance',
+ 'bilties','challans','activityLog'].forEach(k => {
+  if (Array.isArray(state[k])) {
+    state[k] = state[k].filter(Boolean);
+  }
+});
 
 // ══════════════════════════════════════════════════════
 //  UTILS
@@ -2658,10 +2666,10 @@ function buildModalHTML(){
     </div>
   </div>`;
 
-  const editShip=m._editShip!=null?state.shipments[m._editShip]:{};
-  const editClt=m._editClient!=null?state.clients[m._editClient]:{};
-  const editStaff=m._editStaff!=null?state.staff[m._editStaff]:{};
-  const editVeh=m._editVehicle!=null?state.vehicles[m._editVehicle]:{};
+  const editShip=m._editShip!=null?(state.shipments||[])[m._editShip]||{}:{};
+  const editClt=m._editClient!=null?(state.clients||[])[m._editClient]||{}:{};
+  const editStaff=m._editStaff!=null?(state.staff||[])[m._editStaff]||{}:{};
+  const editVeh=m._editVehicle!=null?(state.vehicles||[])[m._editVehicle]||{}:{};
 
   return `
   ${modal('modalShipment',m.shipment,`🚚 ${m._editShip!=null?'Edit':'New'} Shipment`,`
@@ -2758,7 +2766,7 @@ function buildModalHTML(){
 
   <!-- ── CUSTOM BILTY MODAL ── -->
   ${modal('modalBilty', m.bilty, '📜 New Goods Receipt (Bilty / بلٹی)', `
-    <datalist id="cltList">${state.clients.map(c=>`<option value="${c.name}">`).join('')}</datalist>
+    <datalist id="cltList">${(state.clients||[]).filter(Boolean).map(c=>`<option value="${c.name||''}">`).join('')}</datalist>
     <div class="field-row">
       <div class="field"><label>Bilty No. (بلٹی نمبر)</label><input id="bilId" type="text" value="${(state.bilties||[]).length + 6429}" placeholder="e.g. 6429"></div>
       <div class="field"><label>Date (تاریخ)</label><input id="bilDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
