@@ -186,6 +186,7 @@ a{color:var(--accent);text-decoration:none}
   color:var(--muted);font-weight:700}
 
 /* ── TABLE ── */
+.table-responsive{overflow-x:auto;width:100%;-webkit-overflow-scrolling:touch;margin-bottom:1rem}
 .table{width:100%;border-collapse:collapse}
 .table th{text-align:left;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;
   color:var(--muted);padding:.78rem .75rem;border-bottom:1px solid rgba(255,255,255,.07);font-weight:700}
@@ -3843,22 +3844,19 @@ document.addEventListener('click', function(e) {
   // Handle data-open (open a modal)
   const opener = e.target.closest('[data-open]');
   if (opener && opener.dataset.open) {
-    // Only act if wireModals did NOT already wire this button
-    if (!opener._wired) {
-      e.stopImmediatePropagation();
-      state.modals[opener.dataset.open] = true;
-      saveState(); render();
-    }
+    e.preventDefault();
+    state.modals[opener.dataset.open] = true;
+    saveState(); render();
     return;
   }
   // Handle data-close (close a modal)
   const closer = e.target.closest('[data-close]');
   if (closer && closer.dataset.close) {
-    if (!closer._wired) {
-      e.stopImmediatePropagation();
-      state.modals[closer.dataset.close] = false;
-      saveState(); render();
-    }
+    e.preventDefault();
+    const k = closer.dataset.close;
+    state.modals[k] = false;
+    ['_editShip','_editStaff','_editVehicle','_editClient'].forEach(p => delete state.modals[p]);
+    saveState(); render();
     return;
   }
 });
@@ -4052,6 +4050,15 @@ function renderContent(){
     $('#modals').innerHTML='';
   }
   wireModals();
+  // Wrap all tables dynamically in responsive scroll containers
+  document.querySelectorAll('table.table').forEach(tbl => {
+    if (tbl.parentElement && !tbl.parentElement.classList.contains('table-responsive')) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'table-responsive';
+      tbl.parentNode.insertBefore(wrapper, tbl);
+      wrapper.appendChild(tbl);
+    }
+  });
   renderNotifications();
   animateKPIs();
   
@@ -4276,6 +4283,7 @@ try { render(); } catch(e) { console.error('Top-level render failed:', e); }
 // Hide the HTML fallback error message — JS loaded OK
 const _ef = document.getElementById('js-error-fallback');
 if(_ef) _ef.style.display = 'none';
+
 
 </script>
 <!-- ═══════════════════════════════════════════
