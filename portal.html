@@ -737,35 +737,6 @@ a{color:var(--accent);text-decoration:none}
 <div id="modals"></div>
 <div id="toast" class="toast"></div>
 
-<!-- Floating AI Chatbot Agent -->
-<div class="ai-widget" id="aiWidget" style="display:none">
-  <button class="ai-trigger" id="aiTrigger" onclick="toggleAIWindow()">💬</button>
-  <div class="ai-window" id="aiWindow">
-    <div class="ai-header">
-      <div class="ai-title">
-        <span class="ai-status"></span>
-        <span style="font-weight:900;color:#fff">Jadoon AI Dispatcher</span>
-      </div>
-      <button class="icon-btn" onclick="toggleAIWindow()" style="font-size:0.82rem;color:var(--muted)">✕</button>
-    </div>
-    <div class="ai-messages" id="aiMessages">
-      <div class="ai-msg bot">
-        Assalam-o-Alaikum! I am **Jadoon AI**, your transport assistant. I can check shipments, search inventory, calculate profit margins, or optimize motorway routes. Ask me anything!
-      </div>
-    </div>
-    <div class="ai-suggestions">
-      <button class="ai-sug-btn" onclick="sendAISuggestion('System health check')">📊 Health check</button>
-      <button class="ai-sug-btn" onclick="sendAISuggestion('List active trips')">🚚 Active trips</button>
-      <button class="ai-sug-btn" onclick="sendAISuggestion('Which items are low in stock?')">📦 Low stock</button>
-      <button class="ai-sug-btn" onclick="sendAISuggestion('What is our net profit?')">💵 Net profit</button>
-    </div>
-    <div class="ai-input-wrap">
-      <input type="text" id="aiInput" placeholder="Ask Jadoon AI..." onkeydown="handleAIKeydown(event)">
-      <button class="btn btn-primary btn-sm" onclick="submitAIQuery()" style="border-radius:10px;padding:.5rem .8rem">Send</button>
-    </div>
-  </div>
-</div>
-
 <script>
 window.onerror = function(msg, url, line) {
   const txt = `⚠️ System Error: ${msg} (Line ${line})`;
@@ -4147,13 +4118,10 @@ function renderContent(){
   if (telemetryInterval) { clearInterval(telemetryInterval); telemetryInterval = null; }
   if (telemetryStreamInterval) { clearInterval(telemetryStreamInterval); telemetryStreamInterval = null; }
 
-  const widget = $('#aiWidget');
   if(!state.authenticated){
     loginView();
-    if(widget) widget.style.display = 'none';
     return;
   }
-  if(widget) widget.style.display = 'block';
   $('#login').classList.add('hidden');
   $('#app').classList.remove('hidden');
   navView();topView();renderWarehouseToggles();
@@ -4189,195 +4157,6 @@ function renderContent(){
   if(state.section==='Dashboard' && state.role==='Admin'){
     setTimeout(startTelemetryStream, 150);
   }
-}
-
-// ══════════════════════════════════════════════════════
-//  JADOON AI AGENT ENGINE
-// ══════════════════════════════════════════════════════
-function toggleAIWindow() {
-  const win = $('#aiWindow');
-  if (win) {
-    win.classList.toggle('open');
-    if (win.classList.contains('open')) {
-      $('#aiInput').focus();
-    }
-  }
-}
-
-function handleAIKeydown(e) {
-  if (e.key === 'Enter') submitAIQuery();
-}
-
-function sendAISuggestion(text) {
-  $('#aiInput').value = text;
-  submitAIQuery();
-}
-
-function appendAIMessage(sender, text) {
-  const box = $('#aiMessages');
-  if (!box) return;
-  const msg = document.createElement('div');
-  msg.className = `ai-msg ${sender}`;
-  
-  let html = text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`(.*?)`/g, '<code>$1</code>')
-    .replace(/\n/g, '<br>');
-    
-  msg.innerHTML = html;
-  box.appendChild(msg);
-  box.scrollTop = box.scrollHeight;
-}
-
-async function submitAIQuery() {
-  const input = $('#aiInput');
-  const query = input.value.trim();
-  if (!query) return;
-  
-  input.value = '';
-  appendAIMessage('user', query);
-  
-  const box = $('#aiMessages');
-  const loader = document.createElement('div');
-  loader.className = 'ai-msg bot';
-  loader.style.opacity = '0.7';
-  loader.innerHTML = '✍️ Jadoon AI is thinking...';
-  box.appendChild(loader);
-  box.scrollTop = box.scrollHeight;
-
-  setTimeout(async () => {
-    loader.remove();
-    try {
-      const response = await getAIResponse(query);
-      appendAIMessage('bot', response);
-    } catch(e) {
-      appendAIMessage('bot', `⚠️ AI Connection Error: ${e.message}`);
-    }
-  }, 600);
-}
-
-async function getAIResponse(q) {
-  const key = state.settings?.geminiKey;
-  if (key) {
-    return await callGeminiAPI(key, q);
-  } else {
-    return getLocalAIResponse(q);
-  }
-}
-
-async function callGeminiAPI(apiKey, query) {
-  const activeShips = state.shipments.filter(s=>s.status==='in_transit' || s.status==='delayed');
-  const lowStock = state.stock.filter(i=>i.qty<=i.minQty);
-  const totalIncome = state.transactions.filter(t=>t.type==='income').reduce((a,b)=>a+b.amount,0);
-  const totalExpense = state.transactions.filter(t=>t.type==='expense').reduce((a,b)=>a+b.amount,0);
-
-  const context = `You are Jadoon AI, the official intelligent voice of HBK Jadoon Goods Transport.
-Current Database Metrics:
-- Active Shipments: ${activeShips.length} (${activeShips.map(s=>`${s.id} to ${s.dest}`).join(', ')})
-- Low Stock Items: ${lowStock.length} (${lowStock.map(i=>`${i.name} [Qty: ${i.qty}]`).join(', ')})
-- Total Income: Rs ${totalIncome.toLocaleString()}
-- Total Expenses: Rs ${totalExpense.toLocaleString()}
-- Active Staff: ${state.staff.length} employees
-- Vehicles: ${state.vehicles.length} trucks
-
-Instructions:
-1. Answer short, professional, and precise.
-2. If the user asks about shipments, profit, drivers, or inventory, refer to the database metrics above.
-3. Be helpful, polite, and speak with Pakistani business etiquette (use terms like "Assalam-o-Alaikum", "Sahib").
-4. Reply in Urdu or English depending on user query.`;
-
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [
-          { role: 'user', parts: [{ text: `${context}\n\nUser Query: ${query}` }] }
-        ]
-      })
-    });
-    
-    if (!res.ok) {
-      const err = await res.json();
-      return `Gemini API returned error: ${err.error?.message || res.statusText}. Using offline fallback:\n\n${getLocalAIResponse(query)}`;
-    }
-    
-    const data = await res.json();
-    return data.candidates[0].content.parts[0].text;
-  } catch(e) {
-    return `Could not connect to Gemini API (${e.message}). Offline Fallback:\n\n${getLocalAIResponse(query)}`;
-  }
-}
-
-function getLocalAIResponse(q) {
-  const query = q.toLowerCase();
-  
-  if (query.includes('health') || query.includes('status') || query.includes('system')) {
-    const active = state.shipments.filter(s=>s.status==='in_transit').length;
-    const delayed = state.shipments.filter(s=>s.status==='delayed').length;
-    const lowStock = state.stock.filter(i=>i.qty<=i.minQty).length;
-    return `📊 **System Health Check Summary:**\n\n` +
-           `• **Trips in Transit:** ${active} active shipment(s).\n` +
-           `• **Delayed Trips:** ${delayed} delay warning(s).\n` +
-           `• **Low Inventory Alerts:** ${lowStock} item(s) below reorder threshold.\n` +
-           `• **Database Sync:** Connected (Local storage backup active).\n\n` +
-           `All terminals (Karachi, Lahore, Islamabad) are operating normally.`;
-  }
-  
-  if (query.includes('shipment') || query.includes('trip') || query.includes('parcel') || query.includes('cargo')) {
-    const inTransit = state.shipments.filter(s=>['in_transit','delayed'].includes(s.status));
-    if (!inTransit.length) {
-      return `🚚 There are currently **no shipments** active or in transit on the map. All deliveries are completed!`;
-    }
-    const list = inTransit.map(s => `• **${s.id}**: ${s.client} (${s.origin} ➔ ${s.dest}) - Status: *${STATUS_META[s.status][0]}* (ETA: ${s.eta})`).join('\n');
-    return `🚚 **Active Cargo Shipments (${inTransit.length} in transit):**\n\n${list}`;
-  }
-  
-  if (query.includes('stock') || query.includes('inventory') || query.includes('item') || query.includes('spare')) {
-    const low = state.stock.filter(i => i.qty <= i.minQty);
-    if (!low.length) {
-      return `📦 **Inventory Status:** All spare parts, tires, and oil stocks are **above critical levels**. No reorders needed!`;
-    }
-    const list = low.map(i => `• **${i.name}**: Current Stock: *${i.qty} ${i.unit}* (Min required: ${i.minQty})`).join('\n');
-    return `📦 **Low Stock Alerts (Needs Reorder):**\n\n${list}\n\n*Please alert the procurement officer.*`;
-  }
-  
-  if (query.includes('profit') || query.includes('income') || query.includes('expense') || query.includes('finance') || query.includes('money') || query.includes('rupees')) {
-    const inc = state.transactions.filter(t=>t.type==='income').reduce((a,b)=>a+b.amount,0);
-    const exp = state.transactions.filter(t=>t.type==='expense').reduce((a,b)=>a+b.amount,0);
-    const net = inc - exp;
-    return `💵 **Financial Summary Report:**\n\n` +
-           `• **Total Revenue:** ${money(inc)}\n` +
-           `• **Total Expenses:** ${money(exp)}\n` +
-           `• **Net Operational Profit:** **${money(net)}**\n\n` +
-           `Balance Sheet looks healthy and is backed up successfully.`;
-  }
-
-  if (query.includes('staff') || query.includes('driver') || query.includes('employee') || query.includes('team')) {
-    const activeStaff = state.staff.filter(p=>p.status==='active');
-    return `👥 **HBK Team Summary:**\n\n` +
-           `• Total Employees registered: **${state.staff.length}**\n` +
-           `• Active on-duty staff: **${activeStaff.length}**\n\n` +
-           `You can manage assignments or update driver logins in the *Staff directory* tab.`;
-  }
-
-  if (query.includes('route') || query.includes('optimizer') || query.includes('calculate')) {
-    return `🛣️ **Pakistan Motorway Calculator:**\n\n` +
-           `To calculate cost, fuel consumption, driver allowances, and recommended profit pricing, please switch to the **Optimizer** tab in the sidebar and input your origin/destination details. It has real-time tolls and motorways route mapping!`;
-  }
-  
-  if (query.includes('backup') || query.includes('save') || query.includes('excel')) {
-    return `💾 **Data Backup & Security:**\n\n` +
-           `Your data is currently encrypted and saved in your local browser storage (**localStorage**). To keep it permanently safe, please go to **Settings** and click **Export Full Backup (JSON)** or connect the Google Drive auto-sync script detailed in the README guide.`;
-  }
-
-  return `Jadoon AI Dispatcher Sahib! I am ready to help. You can ask me:\n\n` +
-         `1. *"Show active shipments"* to see live trips.\n` +
-         `2. *"Check system health"* for terminal checks.\n` +
-         `3. *"Which items are low in stock?"* to see warehouse alerts.\n` +
-         `4. *"What is our net profit?"* to check the financial ledger.`;
 }
 
 function render(sv=true){
@@ -4606,7 +4385,9 @@ if(_ef) _ef.style.display = 'none';
 <script>
   (function(){
     var opened = false;
+    window._waDragged = false;
     window.waToggle = function() {
+      if(window._waDragged) return;
       opened = !opened;
       document.getElementById('wa-popup').classList.toggle('open', opened);
       document.getElementById('wa-fab').classList.toggle('active', opened);
@@ -4718,8 +4499,13 @@ if(_ef) _ef.style.display = 'none';
         isDragging = false;
         widget.style.cursor = '';
         if (hasMoved) {
-          e.stopPropagation();
-          e.preventDefault();
+          window._waDragged = true;
+          setTimeout(function() { window._waDragged = false; }, 100);
+          hasMoved = false;
+          if (e && e.type !== 'touchcancel') {
+            e.stopPropagation();
+            if(e.cancelable) e.preventDefault();
+          }
         }
       }
 
@@ -4730,6 +4516,7 @@ if(_ef) _ef.style.display = 'none';
       widget.addEventListener('touchstart', onStart, { passive: true });
       document.addEventListener('touchmove', onMove, { passive: false });
       document.addEventListener('touchend', onEnd);
+      document.addEventListener('touchcancel', onEnd);
     }
   })();
 </script>
