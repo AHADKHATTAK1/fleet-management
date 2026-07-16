@@ -2422,7 +2422,10 @@ function receivingView(){
     <div style="padding:.75rem;margin-top:3px;border:1px solid var(--line);border-top:0;border-radius:0 0 13px 13px;background:rgba(6,10,20,.5)">
       <table class="table"><thead><tr><th>Item</th><th>Ordered</th><th>Received</th><th>Status</th></tr></thead>
       <tbody>${(state.receivingLines[r.id]||[]).map(l=>{const full=l.received>=l.ordered&&l.ordered>0;const none=l.received===0;const st=full?'received':none?'pending':'partial';return`<tr><td>${l.name}</td><td>${l.ordered}</td><td>${l.received}</td><td>${badge(st)}</td></tr>`;}).join('')}</tbody></table>
-      ${r.approval!=='approved'?`<div style="margin-top:10px"><button class="btn btn-success btn-sm" data-approve-receiving="${r.id}">✓ Approve slip</button></div>`:''}
+      <div style="margin-top:10px; display:flex; gap:10px;">
+        ${r.approval!=='approved'?`<button class="btn btn-success btn-sm" data-approve-receiving="${r.id}">✓ Approve slip</button>`:''}
+        <button class="btn btn-info btn-sm" data-print-receiving="${r.id}">🖨️ Print Slip</button>
+      </div>
     </div>
   </details>`).join('')}</div>`;
 }
@@ -3351,6 +3354,10 @@ function wireModals(){
     const gp=state.gatepasses.find(x=>String(x.id)===String(b.dataset.printGatepass));
     if(gp)printGatepass(gp);
   });
+  $$('[data-print-receiving]').forEach(b=>b.onclick=()=>{
+    const rec=state.receiving.find(x=>String(x.id)===String(b.dataset.printReceiving));
+    if(rec)printReceiving(rec);
+  });
 
   // TOGGLE STAFF STATUS
   $$('[data-toggle-staff]').forEach(b=>b.onclick=()=>{
@@ -3883,6 +3890,71 @@ function printGatepass(gp){
   </html>
   `;
   
+  const win=window.open('','_blank');
+  if(win) {
+    win.document.write(htmlStr);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 200);
+  } else {
+    printFallback(htmlStr);
+  }
+}
+
+function printReceiving(slip){
+  const lines = state.receivingLines[slip.id] || [];
+  const htmlStr = `
+  <html>
+  <head>
+    <title>Goods Receipt Note #${slip.id}</title>
+    <style>
+      body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; color: #222; }
+      .container { border: 2px solid #2c3e50; padding: 20px; border-radius: 8px; max-width: 800px; margin: 0 auto; background: #fff; }
+      .header-title { text-align: center; border-bottom: 2px solid #2c3e50; padding-bottom: 10px; margin-bottom: 20px; }
+      .header-title h1 { font-size: 1.8rem; margin: 0; color: #0d3559; font-weight: bold; }
+      .header-title h2 { font-size: 1.2rem; margin: 5px 0; color: #555; }
+      .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; }
+      .meta-item { border-bottom: 1px solid #ddd; padding-bottom: 5px; font-size: 0.95rem; }
+      table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+      th { background: #2c3e50; color: #fff; text-align: left; padding: 10px; font-size: 0.9rem; }
+      td { padding: 10px; border: 1px solid #ddd; font-size: 0.9rem; }
+      .total-row { font-weight: bold; background: #f8f9fa; }
+      .bottom-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 50px; }
+      .sig-box { width: 200px; text-align: center; border-top: 1px solid #222; padding-top: 5px; font-size: 0.9rem; }
+      @media print { body { padding: 0; } .container { border: none; } button { display: none; } }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header-title">
+        <h1 style="font-family: serif;">حاجی برکت خان جدون گڈز ٹرانسپورٹ کمپنی (رجسٹرڈ)</h1>
+        <h2>GOODS RECEIPT NOTE (GRN)</h2>
+      </div>
+      <div class="meta-grid">
+        <div class="meta-item"><strong>GRN No:</strong> <span style="font-weight:bold;color:#cc0000">#${slip.id}</span></div>
+        <div class="meta-item"><strong>Date:</strong> ${slip.date}</div>
+        <div class="meta-item"><strong>Supplier/Vendor:</strong> ${slip.supplier}</div>
+        <div class="meta-item"><strong>Total Value:</strong> Rs. ${(+slip.value).toLocaleString()}</div>
+        <div class="meta-item"><strong>Status:</strong> ${slip.status}</div>
+        <div class="meta-item"><strong>Approval:</strong> ${slip.approval}</div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Item Code / Description</th><th>Ordered Qty</th><th>Received Qty</th></tr>
+        </thead>
+        <tbody>
+          ${lines.map(l => "<tr><td>" + l.name + "</td><td>" + l.ordered + "</td><td>" + l.received + "</td></tr>").join('')}
+          ${lines.length===0 ? "<tr><td colspan='3' style='text-align:center'>No items found.</td></tr>":""}
+        </tbody>
+      </table>
+      <div class="bottom-row">
+        <div class="sig-box">Prepared By (Store/Warehouse)</div>
+        <div class="sig-box">Approved By (Manager)</div>
+      </div>
+    </div>
+  </body>
+  </html>
+  `;
   const win=window.open('','_blank');
   if(win) {
     win.document.write(htmlStr);
