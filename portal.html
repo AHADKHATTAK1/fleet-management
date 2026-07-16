@@ -4203,6 +4203,7 @@ if(_ef) _ef.style.display = 'none';
     flex-direction: column;
     align-items: flex-end;
     gap: 12px;
+    pointer-events: none;
   }
   #wa-popup {
     width: 320px;
@@ -4306,6 +4307,7 @@ if(_ef) _ef.style.display = 'none';
     animation: wa-pulse 2.4s infinite;
     transition: transform 0.2s, box-shadow 0.2s;
     position: relative;
+    pointer-events: auto;
   }
   #wa-fab:hover { transform: scale(1.08); box-shadow: 0 10px 36px rgba(37,211,102,0.65); }
   #wa-fab svg { width: 28px; height: 28px; fill: #fff; transition: transform 0.3s; }
@@ -4332,6 +4334,7 @@ if(_ef) _ef.style.display = 'none';
     box-shadow: 0 4px 20px rgba(0,0,0,0.12);
     white-space: nowrap;
     animation: wa-fadein 0.5s ease both;
+    pointer-events: auto;
   }
   @keyframes wa-fadein { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 </style>
