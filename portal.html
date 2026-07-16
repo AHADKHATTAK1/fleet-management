@@ -892,6 +892,7 @@ const SEED={
   challans:[
     {id:'319',date:'2026-07-09',truckNo:'TRK-0731',driverName:'Ali Raza',driverPhone:'0301-1234567',senderName:'HBK Jadoon',receiverName:'Lahore Station',biltyIds:['6428'],driverFreight:15000}
   ],
+  gatepasses:[],
   activityLog:[
     {id:'ACT-001',action:'Shipment delivered',module:'Shipments',details:'WB-48177 marked delivered',by:'admin@hbkjadoon.pk',at:'Jun 30, 2026 8:52 AM'},
     {id:'ACT-002',action:'Salary paid',module:'Salaries',details:'Ali Raza June 2026 — Rs 43,000',by:'admin@hbkjadoon.pk',at:'Jun 30, 2026 5:00 PM'},
@@ -912,7 +913,7 @@ const state={
 // Always migrate and ensure all database collections from SEED are present in state
 ['shipments','stock','receiving','receivingLines','transactions','staff','salaries',
  'vehicles','fuelLogs','maintenance','clients','stockMovements','invoices','attendance',
- 'bilties','challans','activityLog','settings'].forEach(k => {
+ 'bilties','challans','gatepasses','activityLog','settings'].forEach(k => {
   if (state[k] === undefined || state[k] === null) {
     state[k] = JSON.parse(JSON.stringify(SEED[k]));
   }
@@ -920,10 +921,11 @@ const state={
 if(!state.attendance)state.attendance=[];
 if(!state.bilties)state.bilties=[];
 if(!state.challans)state.challans=[];
+if(!state.gatepasses)state.gatepasses=[];
 // Clean any null/undefined entries in state collections to prevent mapping crashes
 ['shipments','stock','receiving','transactions','staff','salaries',
  'vehicles','fuelLogs','maintenance','clients','stockMovements','invoices','attendance',
- 'bilties','challans','activityLog'].forEach(k => {
+ 'bilties','challans','gatepasses','activityLog'].forEach(k => {
   if (Array.isArray(state[k])) {
     state[k] = state[k].filter(Boolean);
   }
@@ -956,6 +958,7 @@ const STATUS_META={
   received:['Received','#3DDC97','rgba(61,220,151,.13)','dot-active'],
   partial:['Partial','#FF8A3D','rgba(255,138,61,.13)','dot-transit'],
   pending:['Pending','#8B93A7','rgba(139,147,167,.13)','dot-pending'],
+  approved:['Approved','#3DDC97','rgba(61,220,151,.13)','dot-active'],
   active:['Active','#3DDC97','rgba(61,220,151,.13)','dot-active'],
   suspended:['Suspended','#FF5C5C','rgba(255,92,92,.13)','dot-delayed'],
   paid:['Paid','#3DDC97','rgba(61,220,151,.13)','dot-active'],
@@ -1123,10 +1126,10 @@ function animateKPIs(){
 // ══════════════════════════════════════════════════════
 //  AUTH & NAV
 // ══════════════════════════════════════════════════════
-const SECTIONS_ADMIN=['Dashboard','Shipments','Optimizer','Bilties','Challans','Invoices','Clients','Staff','Salaries','Attendance','Vehicles','Fuel Logs','Maintenance','Stock','Receiving','Payments','Reports','Activity Log','Settings','Guide'];
-const SECTIONS_STAFF=['Dashboard','Shipments','Bilties','Challans','Stock','Receiving','Payments','Reports','Guide'];
-const NAV_ICONS={Dashboard:'📊',Shipments:'🚚',Optimizer:'🛣️',Bilties:'📜',Challans:'📋',Invoices:'🧾',Clients:'🏢',Staff:'👥',Salaries:'💰',Attendance:'🗓️',Vehicles:'🚛',['Fuel Logs']:'⛽',Maintenance:'🔧',Stock:'📦',Receiving:'📄',Payments:'💳',Reports:'📑',['Activity Log']:'📋',Settings:'⚙️',Guide:'❓'};
-const NAV_GROUPS={Management:['Shipments','Optimizer','Bilties','Challans','Invoices','Clients'],HR:['Staff','Salaries','Attendance'],Fleet:['Vehicles','Fuel Logs','Maintenance'],Operations:['Stock','Receiving','Payments'],Analytics:['Reports','Activity Log'],System:['Settings','Guide']};
+const SECTIONS_ADMIN=['Dashboard','Shipments','Optimizer','Bilties','Challans','Gate Passes','Invoices','Clients','Staff','Salaries','Attendance','Vehicles','Fuel Logs','Maintenance','Stock','Receiving','Payments','Reports','Activity Log','Settings','Guide'];
+const SECTIONS_STAFF=['Dashboard','Shipments','Bilties','Challans','Gate Passes','Stock','Receiving','Payments','Reports','Guide'];
+const NAV_ICONS={Dashboard:'📊',Shipments:'🚚',Optimizer:'🛣️',Bilties:'📜',Challans:'📋',['Gate Passes']:'🚧',Invoices:'🧾',Clients:'🏢',Staff:'👥',Salaries:'💰',Attendance:'🗓️',Vehicles:'🚛',['Fuel Logs']:'⛽',Maintenance:'🔧',Stock:'📦',Receiving:'📄',Payments:'💳',Reports:'📑',['Activity Log']:'📋',Settings:'⚙️',Guide:'❓'};
+const NAV_GROUPS={Management:['Shipments','Optimizer','Bilties','Challans','Gate Passes','Invoices','Clients'],HR:['Staff','Salaries','Attendance'],Fleet:['Vehicles','Fuel Logs','Maintenance'],Operations:['Stock','Receiving','Payments'],Analytics:['Reports','Activity Log'],System:['Settings','Guide']};
 
 function loginView(){
   $('#login').innerHTML=`
@@ -1373,6 +1376,12 @@ window.toggleWarehouse=function(wh){
 
 window.toggleCityFilter=function(city){
   state.cityFilter = city;
+  saveState();
+  render();
+};
+
+window.toggleTxnFilter=function(filter){
+  state.txnFilter = filter;
   saveState();
   render();
 };
@@ -2078,6 +2087,50 @@ function challansView(){
 
 
 
+function gatepassView(){
+  const q=state.search.trim().toLowerCase();
+  const filtered=state.gatepasses.filter(g=>!q||[g.id,g.truck,g.driver].some(v=>(v||'').toLowerCase().includes(q)));
+  
+  return `
+  <div class="panel">
+    <div class="section-head" style="align-items:center">
+      <div class="section-label" style="margin:0">Gate Passes — ${filtered.length} total</div>
+      <button class="btn btn-primary" data-open="gatepass">+ New Gate Pass (گیٹ پاس)</button>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Gate Pass #</th>
+          <th>Date & Time</th>
+          <th>Type</th>
+          <th>Vehicle</th>
+          <th>Driver</th>
+          <th>Status</th>
+          <th>Notes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map(g=>`
+        <tr>
+          <td class="mono" style="color:#ffcfaa;font-weight:700">#${g.id}</td>
+          <td class="muted">${g.date} <span style="font-size:0.75rem">${g.time||''}</span></td>
+          <td><span style="background:${g.type==='IN'?'rgba(61,220,151,0.15)':'rgba(255,92,92,0.15)'};color:${g.type==='IN'?'#3ddc97':'#ff5c5c'};padding:2px 8px;border-radius:12px;font-size:0.8rem;font-weight:700">${g.type==='IN'?'IN 📥':'OUT 📤'}</span></td>
+          <td class="mono" style="font-weight:700">${g.truck||'—'}</td>
+          <td style="font-weight:600">${g.driver||'—'}</td>
+          <td style="color:var(--muted)">${g.status||'Active'}</td>
+          <td style="color:var(--muted);max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.notes||'—'}</td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <button class="icon-btn btn-danger" data-del-gatepass="${g.id}">🗑</button>
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
 function clientsView(){
   const q=state.search.trim().toLowerCase();
   const filtered=state.clients.filter(c=>!q||[c.name,c.contact,c.city,c.email].some(v=>(v||'').toLowerCase().includes(q)));
@@ -2407,8 +2460,14 @@ function paymentsView(){
   const income=state.transactions.filter(t=>t.type==='income'&&t.status==='approved').reduce((a,b)=>a+b.amount,0);
   const expense=state.transactions.filter(t=>t.type==='expense'&&t.status==='approved').reduce((a,b)=>a+b.amount,0);
   const q=state.search.trim().toLowerCase();
+  
+  let txns = state.transactions;
+  if (isAdmin && state.txnFilter) {
+    txns = txns.filter(t => t.status === state.txnFilter);
+  }
+  
   // Staff only see expenses (not income/financial totals)
-  const visible=(isAdmin?state.transactions:state.transactions.filter(t=>t.type==='expense')).filter(t=>!q||[t.id,t.desc,t.category].some(v=>(v||'').toLowerCase().includes(q)));
+  const visible=(isAdmin?txns:txns.filter(t=>t.type==='expense')).filter(t=>!q||[t.id,t.desc,t.category].some(v=>(v||'').toLowerCase().includes(q)));
   return `
   ${isAdmin?`<div class="grid3">${kpi(money(income),'Total income','#3ddc97','💵')}${kpi(money(expense),'Total expenses','#ff5c5c','💸')}${kpi(money(income-expense),'Net cashflow','#ff8a3d','💹')}</div>`:''}
   ${!isAdmin?`<div class="panel" style="border-color:rgba(88,166,255,.2);background:rgba(88,166,255,.04);margin-bottom:14px">
@@ -2420,29 +2479,43 @@ function paymentsView(){
       </div>
     </div>
   </div>`:''}
-  <div class="panel"><div class="section-head"><div class="section-label">${isAdmin?'All transactions':'Expense records'} — ${visible.length} entries</div><button class="btn btn-primary" data-open="payment">+ ${isAdmin?'New entry':'Submit expense'}</button></div>
-  <table class="table"><thead><tr><th>ID</th><th>Description</th><th>Category</th><th>Date</th><th>Amount</th><th>Status / Type</th><th>Actions</th></tr></thead>
-  <tbody>${visible.map((t,i)=>{
-    const isPending=t.status==='pending';
-    const typeBadge=isPending?`<span class="badge" style="color:#ff8a3d;background:rgba(255,138,61,.15)"><span class="status-dot dot-transit"></span>Pending</span>`:badge(t.type==='income'?'active':'suspended');
-    return `<tr>
-      <td class="mono" style="font-size:.75rem;color:var(--muted)">${t.id}</td>
-      <td>
-        <div style="font-weight:600">${t.desc}</div>
-        ${t.submittedBy?`<div class="muted mono" style="font-size:.72rem">Submitted by: ${t.submittedBy}</div>`:''}
-      </td>
-      <td><span style="background:rgba(255,255,255,.05);color:var(--muted);padding:.18rem .5rem;border-radius:6px;font-size:.74rem">${t.category}</span></td>
-      <td class="muted">${t.date}</td>
-      <td style="font-weight:800;color:${t.type==='income'?'var(--good)':'#ffb1b1'}">${t.type==='income'?'+':'-'}${money(t.amount)}</td>
-      <td>${typeBadge}</td>
-      <td>
-        <div style="display:flex;gap:6px">
-          ${isAdmin&&isPending?`<button class="btn btn-sm btn-success" data-approve-txn="${t.id}">✓ Approve</button>`:''}
-          ${isAdmin?`<button class="icon-btn btn-danger" data-del-txn="${t.id}">🗑</button>`:''}
+  <div class="panel">
+    <div class="section-head" style="align-items:center">
+      <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap">
+        <div class="section-label" style="margin:0">${isAdmin?'All transactions':'Expense records'} — ${visible.length} entries</div>
+        ${isAdmin ? `
+        <div style="display:flex;gap:4px;background:rgba(255,255,255,0.05);padding:4px;border-radius:8px">
+          <button class="btn btn-sm ${!state.txnFilter?'btn-primary':''}" style="padding:4px 10px;font-size:0.75rem" onclick="toggleTxnFilter(null)">All</button>
+          <button class="btn btn-sm ${state.txnFilter==='pending'?'btn-primary':''}" style="padding:4px 10px;font-size:0.75rem" onclick="toggleTxnFilter('pending')">Pending Approval</button>
+          <button class="btn btn-sm ${state.txnFilter==='approved'?'btn-primary':''}" style="padding:4px 10px;font-size:0.75rem" onclick="toggleTxnFilter('approved')">Approved</button>
         </div>
-      </td>
-    </tr>`;
-  }).join('')}</tbody></table></div>`;
+        ` : ''}
+      </div>
+      <button class="btn btn-primary" data-open="payment">+ ${isAdmin?'New entry':'Submit expense'}</button>
+    </div>
+    <table class="table"><thead><tr><th>ID</th><th>Description</th><th>Category</th><th>Date</th><th>Amount</th><th>Status / Type</th><th>Actions</th></tr></thead>
+    <tbody>${visible.map((t,i)=>{
+      const isPending=t.status==='pending';
+      const typeBadge=isPending?badge('pending'):badge('approved');
+      return `<tr>
+        <td class="mono" style="font-size:.75rem;color:var(--muted)">${t.id}</td>
+        <td>
+          <div style="font-weight:600">${t.desc}</div>
+          ${t.submittedBy?`<div class="muted mono" style="font-size:.72rem">Submitted by: ${t.submittedBy}</div>`:''}
+        </td>
+        <td><span style="background:rgba(255,255,255,.05);color:var(--muted);padding:.18rem .5rem;border-radius:6px;font-size:.74rem">${t.category}</span></td>
+        <td class="muted">${t.date}</td>
+        <td style="font-weight:800;color:${t.type==='income'?'var(--good)':'#ffb1b1'}">${t.type==='income'?'+':'-'}${money(t.amount)}</td>
+        <td>${typeBadge}</td>
+        <td>
+          <div style="display:flex;gap:6px">
+            ${isAdmin&&isPending?`<button class="btn btn-sm btn-success" data-approve-txn="${t.id}">✓ Approve</button>`:''}
+            ${isAdmin?`<button class="icon-btn btn-danger" data-del-txn="${t.id}">🗑</button>`:''}
+          </div>
+        </td>
+      </tr>`;
+    }).join('')}</tbody></table>
+  </div>`;
 }
 
 function reportsView(){
@@ -2569,8 +2642,8 @@ function settingsView(){
   const s=state.settings;
   const isAdmin=state.role==='Admin';
   const visibleSections=isAdmin?
-    ['Shipments','Optimizer','Bilties','Challans','Invoices','Clients','Staff','Salaries','Attendance','Vehicles','Fuel Logs','Maintenance','Stock','Receiving','Payments','Reports','Activity Log','Guide']:
-    ['Shipments','Bilties','Challans','Stock','Receiving','Payments','Reports','Guide'];
+    ['Shipments','Optimizer','Bilties','Challans','Gate Passes','Invoices','Clients','Staff','Salaries','Attendance','Vehicles','Fuel Logs','Maintenance','Stock','Receiving','Payments','Reports','Activity Log','Guide']:
+    ['Shipments','Bilties','Challans','Gate Passes','Stock','Receiving','Payments','Reports','Guide'];
   return `<div class="grid2">
     <div class="panel">
       <div class="settings-title">🏢 Company Information</div>
@@ -2775,6 +2848,11 @@ function buildModalHTML(){
     const maxId = Math.max(...state.challans.map(c => parseInt(String(c.id).replace(/\D/g, '')) || 0));
     return maxId >= 320 ? maxId + 1 : 320;
   };
+  const getNextGatepassId = () => {
+    if (!state.gatepasses || !state.gatepasses.length) return 1001;
+    const maxId = Math.max(...state.gatepasses.map(g => parseInt(String(g.id).replace(/\D/g, '')) || 0));
+    return maxId >= 1001 ? maxId + 1 : 1001;
+  };
 
   return `
   ${modal('modalShipment',m.shipment,`🚚 ${m._editShip!=null?'Edit':'New'} Shipment`,`
@@ -2947,8 +3025,27 @@ function buildModalHTML(){
           `).join('');
         })()}
       </div>
+      </div>
     </div>
   `, `<button class="btn" data-close="challan">Cancel</button><button class="btn btn-primary" id="saveChallan">✅ Create Challan</button>`)}
+
+  ${modal('modalGatepass', m.gatepass, '🚧 New Gate Pass (گیٹ پاس)', `
+    <div class="field-row">
+      <div class="field"><label>Gate Pass No.</label><input id="gpId" type="text" value="${getNextGatepassId()}" placeholder="1001"></div>
+      <div class="field"><label>Date</label><input id="gpDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Type (اندر / باہر)</label><select id="gpType"><option value="IN">IN 📥</option><option value="OUT">OUT 📤</option></select></div>
+      <div class="field"><label>Time</label><input id="gpTime" type="time" value="${new Date().toTimeString().slice(0,5)}"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Vehicle No.</label><input id="gpTruck" list="vehList" placeholder="e.g. LHR-5512"></div>
+      <div class="field"><label>Driver Name</label><input id="gpDriver" list="drvList" placeholder="Driver name"></div>
+    </div>
+    <div class="field"><label>Notes / Remarks (تفصیل)</label><input id="gpNotes" placeholder="Reason for entry/exit..."></div>
+    <datalist id="vehList">${(state.vehicles||[]).map(v=>`<option value="${v.plate}">`).join('')}</datalist>
+    <datalist id="drvList">${(state.staff||[]).filter(s=>s.role==='Driver').map(s=>`<option value="${s.name}">`).join('')}</datalist>
+  `, `<button class="btn" data-close="gatepass">Cancel</button><button class="btn btn-primary" id="saveGatepass">✅ Save Gate Pass</button>`)}
   `;
 }
 
@@ -3191,6 +3288,28 @@ function wireModals(){
     saveState();toast(`✅ Challan #${id} created${biltyIds.length?' with '+biltyIds.length+' Bilties':''}`);render();
   };
 
+  // SAVE GATEPASS
+  if(m.gatepass&&$('#saveGatepass'))$('#saveGatepass').onclick=()=>{
+    const id=$('#gpId').value.trim();
+    if(!id)return toast('Gate Pass No. required','bad');
+    if(state.gatepasses.find(g=>String(g.id)===String(id)))return toast('Gate Pass #'+id+' already exists','bad');
+    const gp={
+      id,
+      date:$('#gpDate').value,
+      time:$('#gpTime').value,
+      type:$('#gpType').value,
+      truck:$('#gpTruck').value.trim(),
+      driver:$('#gpDriver').value.trim(),
+      notes:$('#gpNotes').value.trim(),
+      status:'Active',
+      createdAt:new Date().toISOString()
+    };
+    state.gatepasses.unshift(gp);
+    state.modals.gatepass=false;
+    logActivity('Gate Pass created','Gate Passes',`#${id} - ${gp.type} for ${gp.truck}`);
+    saveState();toast(`✅ Gate Pass #${id} created`);render();
+  };
+
   // APPROVE ACTIONS
   $$('[data-approve-ship]').forEach(b=>b.onclick=()=>{const s=state.shipments.find(x=>x.id===b.dataset.approveShip);if(!s)return;s.status='delivered';s.progress=1;logActivity('Shipment delivered','Shipments',s.id);saveState();toast(`${s.id} delivered`);render()});
   $$('[data-approve-receiving]').forEach(b=>b.onclick=()=>{const slip=state.receiving.find(r=>r.id===b.dataset.approveReceiving);if(!slip)return;(state.receivingLines[slip.id]||[]).forEach(l=>{const si=state.stock.find(s=>s.item===l.name);if(si)si.qty=(si.qty||0)+(l.received||0);});slip.approval='approved';slip.status='received';logActivity('Receiving approved','Receiving',slip.id);saveState();toast(`${slip.id} approved`);render()});
@@ -3331,6 +3450,11 @@ function wireModals(){
   $$('[data-del-challan]').forEach(b=>b.onclick=()=>{
     if(!confirm('Delete Challan?'))return;
     state.challans=state.challans.filter(x=>x.id!==b.dataset.delChallan);
+    saveState();toast('Deleted','bad');render();
+  });
+  $$('[data-del-gatepass]').forEach(b=>b.onclick=()=>{
+    if(!confirm('Delete Gate Pass?'))return;
+    state.gatepasses=state.gatepasses.filter(x=>x.id!==b.dataset.delGatepass);
     saveState();toast('Deleted','bad');render();
   });
 
@@ -4036,7 +4160,7 @@ function renderContent(){
 
   const views={
     Dashboard:dashboardView,Shipments:shipmentsView,Optimizer:optimizerView,
-    Bilties:biltiesView,Challans:challansView,Invoices:invoicesView,
+    Bilties:biltiesView,Challans:challansView,['Gate Passes']:gatepassView,Invoices:invoicesView,
     Clients:clientsView,Staff:staffView,Salaries:salariesView,Attendance:attendanceView,
     Vehicles:vehiclesView,['Fuel Logs']:fuelLogsView,Maintenance:maintenanceView,
     Stock:stockView,Receiving:receivingView,Payments:paymentsView,
